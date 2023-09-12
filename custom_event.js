@@ -50,18 +50,26 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 
 			if (matchesCurrentURL) {
 				document.querySelector(trigger.selector).addEventListener(trigger.trigger_event, () => {
-					configuration.platforms.forEach((platform) => {
-						switch (platform.name) {
-							case "rudderstack":
-								fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
-								break;
-							case "piwik":
-								firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
-								break;
-							default:
-								throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
-						}
-					});
+					configuration.platforms.forEach(
+						handleErrors((platform) => {
+							switch (platform.name) {
+								case "rudderstack":
+									fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									break;
+								case "piwik":
+									firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									break;
+								case "facebook":
+									fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									break;
+								case "adform":
+									fireAdformCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									break;
+								default:
+									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
+							}
+						})
+					);
 				});
 			}
 		});
@@ -69,14 +77,56 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 }
 
 function fireRudderstackCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+	if (typeof rudderanalytics === "undefined") {
+		throw new MasterworksTelemetryError("rudderanalytics is undefined");
+	}
+
 	metadata.event_name = event_name;
 	rudderanalytics.track(event_type, metadata);
 }
 
 function firePiwikCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+	if (typeof _paq === "undefined") {
+		throw new MasterworksTelemetryError("_paq is undefined");
+	}
+
 	if (options && options.matomo_conflict) {
 		_ppas.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	} else {
 		_paq.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	}
+}
+
+function fireFacebookCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+	if (typeof fbq === "undefined") {
+		throw new MasterworksTelemetryError("fbq is undefined");
+	}
+
+	fbq("track", event_type, { content_name: event_name, ...metadata });
+}
+
+function fireAdformCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.adform_pixel_id is undefined");
+	}
+
+	window._adftrack = Array.isArray(window._adftrack) ? window._adftrack : window._adftrack ? [window._adftrack] : [];
+	window._adftrack.push({
+		pm: mw_telemetry_settings.adform_pixel_id,
+		divider: encodeURIComponent("|"),
+		pagename: encodeURIComponent(`MW-${event_type}`),
+		order: {
+			sv1: event_name,
+			sv8: event_name,
+			sv97: event_name,
+		},
+	});
+	(function () {
+		var s = document.createElement("script");
+		s.type = "text/javascript";
+		s.async = true;
+		s.src = "https://a2.adform.net/serving/scripts/trackpoint/async/";
+		var x = document.getElementsByTagName("script")[0];
+		x.parentNode.insertBefore(s, x);
+	})();
 }
