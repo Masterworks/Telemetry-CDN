@@ -49,33 +49,35 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			}
 
 			if (matchesCurrentURL) {
-				document.querySelector(trigger.selector).addEventListener(trigger.trigger_event, () => {
-					configuration.platforms.forEach(
-						handleErrors((platform) => {
-							switch (platform.name) {
-								case "rudderstack":
-									fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								case "piwik":
-									firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
-									break;
-								case "facebook":
-									fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								case "adform":
-									fireAdformCustomEvent(platform.event_type, configuration.event_name);
-									break;
-								case "zemanta":
-									fireZemantaCustomEvent(platform.event_type);
-									break;
-								case "tiktok":
-									fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								default:
-									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
-							}
-						})
-					);
+				document.querySelectorAll(trigger.selector).forEach((element) => {
+					element.addEventListener(trigger.trigger_event, () => {
+						configuration.platforms.forEach(
+							handleErrors((platform) => {
+								switch (platform.name) {
+									case "rudderstack":
+										fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+										break;
+									case "piwik":
+										firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
+										break;
+									case "facebook":
+										fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+										break;
+									case "adform":
+										fireAdformCustomEvent(platform.event_type, configuration.event_name);
+										break;
+									case "zemanta":
+										fireZemantaCustomEvent(platform.event_type);
+										break;
+									case "tiktok":
+										fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+										break;
+									default:
+										throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
+								}
+							})
+						);
+					});
 				});
 			}
 		});
