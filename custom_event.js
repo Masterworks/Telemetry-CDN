@@ -22,6 +22,8 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			}
 		});
 
+		throw new MasterworksTelemetryError("Invalid custom_event_configurations.metadata: " + configuration.metadata);
+
 		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms: " + configuration.platforms);
 		}
