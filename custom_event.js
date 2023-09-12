@@ -54,16 +54,22 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 						handleErrors((platform) => {
 							switch (platform.name) {
 								case "rudderstack":
-									fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 									break;
 								case "piwik":
-									firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
 									break;
 								case "facebook":
-									fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 									break;
 								case "adform":
-									fireAdformCustomEvent(platform.event_type, configuration.event_name, configuration.metadata, configuration.options);
+									fireAdformCustomEvent(platform.event_type, configuration.event_name);
+									break;
+								case "zemanta":
+									fireZemantaCustomEvent(platform.event_type);
+									break;
+								case "tiktok":
+									fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 									break;
 								default:
 									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
@@ -76,7 +82,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 	});
 }
 
-function fireRudderstackCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
 	if (typeof rudderanalytics === "undefined") {
 		throw new MasterworksTelemetryError("rudderanalytics is undefined");
 	}
@@ -85,7 +91,7 @@ function fireRudderstackCustomEvent(event_type, event_name, metadata = {}, optio
 	rudderanalytics.track(event_type, metadata);
 }
 
-function firePiwikCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+function firePiwikCustomEvent(event_type, event_name, options = {}) {
 	if (typeof _paq === "undefined") {
 		throw new MasterworksTelemetryError("_paq is undefined");
 	}
@@ -97,7 +103,7 @@ function firePiwikCustomEvent(event_type, event_name, metadata = {}, options = {
 	}
 }
 
-function fireFacebookCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+function fireFacebookCustomEvent(event_type, event_name, metadata = {}) {
 	if (typeof fbq === "undefined") {
 		throw new MasterworksTelemetryError("fbq is undefined");
 	}
@@ -105,7 +111,7 @@ function fireFacebookCustomEvent(event_type, event_name, metadata = {}, options 
 	fbq("track", event_type, { content_name: event_name, ...metadata });
 }
 
-function fireAdformCustomEvent(event_type, event_name, metadata = {}, options = {}) {
+function fireAdformCustomEvent(event_type, event_name) {
 	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
 		throw new MasterworksTelemetryError("mw_telemetry_settings.adform_pixel_id is undefined");
 	}
@@ -130,3 +136,23 @@ function fireAdformCustomEvent(event_type, event_name, metadata = {}, options = 
 		x.parentNode.insertBefore(s, x);
 	})();
 }
+
+fireZemantaCustomEvent = (event_type) => {
+	if (typeof zemApi === "undefined") {
+		throw new MasterworksTelemetryError("zemApi is undefined");
+	}
+
+	// Track Event
+	zemApi("track", event_type);
+};
+
+fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
+	if (typeof ttq === "undefined") {
+		throw new MasterworksTelemetryError("ttq is undefined");
+	}
+
+	ttq.track(event_type, {
+		content_name: event_name,
+		...metadata,
+	});
+};
