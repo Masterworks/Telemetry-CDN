@@ -261,7 +261,7 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}) {
 	rudderanalytics.track("Order Completed", {
 		order_id: ecommerce_data.transaction_id,
 		currency: "USD",
-		total: ecommerce_data.total_transaction_amount,
+		revenue: ecommerce_data.total_transaction_amount,
 		products: ecommerce_data.items,
 	});
 }
