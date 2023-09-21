@@ -239,6 +239,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "pinterest":
 					triggerPinterestEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "illumin":
+					triggerIlluminEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -270,7 +273,7 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}) {
 function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
 	if (options.matomo_conflict) {
 		if (typeof _ppas === "undefined") {
-			throw new Error("_ppas is undefined");
+			throw new MasterworksTelemetryError("_ppas is undefined");
 		}
 
 		ecommerce_data.items.forEach((item) => {
@@ -282,7 +285,7 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
 	}
 
 	if (typeof _paq === "undefined") {
-		throw new Error("_paq is undefined");
+		throw new MasterworksTelemetryError("_paq is undefined");
 	}
 
 	ecommerce_data.items.forEach((item) => {
@@ -296,7 +299,7 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
 // ** Facebook ** //
 function triggerFacebookEcommerceEvents(ecommerce_data, options = {}) {
 	if (typeof fbq === "undefined") {
-		throw new Error("fbq is undefined");
+		throw new MasterworksTelemetryError("fbq is undefined");
 	}
 
 	if (!options.sustainer_only) {
@@ -319,7 +322,7 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}) {
 // ** Adform ** //
 function triggerAdformEcommerceEvent(ecommerce_data, options = {}) {
 	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
-		throw new Error("_adftrack is undefined");
+		throw new MasterworksTelemetryError("_adftrack is undefined");
 	}
 
 	window._adftrack = Array.isArray(window._adftrack) ? window._adftrack : window._adftrack ? [window._adftrack] : [];
@@ -353,7 +356,7 @@ function triggerAdformEcommerceEvent(ecommerce_data, options = {}) {
 // ** Zemanta ** //
 function triggerZemantaEcommerceEvent(ecommerce_data, options = {}) {
 	if (typeof zemApi === "undefined") {
-		throw new Error("zemApi is undefined");
+		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
 	zemApi("track", "PURCHASE", { value: ecommerce_data.total_transaction_amount, currency: "USD" });
 }
@@ -361,11 +364,11 @@ function triggerZemantaEcommerceEvent(ecommerce_data, options = {}) {
 // ** Google Ads ** //
 function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}) {
 	if (typeof gtag === "undefined") {
-		throw new Error("gtag is undefined");
+		throw new MasterworksTelemetryError("gtag is undefined");
 	}
 
 	if (!options || !options.google_ads_send_to_ids || options.google_ads_send_to_ids.length < 1) {
-		throw new Error("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids);
+		throw new MasterworksTelemetryError("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids);
 	}
 
 	options.google_ads_send_to_ids.forEach((google_ads_send_to_id) => {
@@ -381,7 +384,7 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}) {
 // ** TikTok ** //
 function triggerTikTokEcommerceEvent(ecommerce_data, options = {}) {
 	if (typeof ttq === "undefined") {
-		throw new Error("ttq is undefined");
+		throw new MasterworksTelemetryError("ttq is undefined");
 	}
 
 	ttq.track("CompletePayment", {
@@ -483,7 +486,7 @@ function triggerMNTNEcommerceEvent(ecommerce_data, options = {}) {
 //  ** Pinterest ** //
 function triggerPinterestEcommerceEvent(ecommerce_data, options = {}) {
 	if (typeof pintrk === "undefined") {
-		throw new Error("pintrk is undefined");
+		throw new MasterworksTelemetryError("pintrk is undefined");
 	}
 
 	pintrk("track", "checkout", {
@@ -494,6 +497,15 @@ function triggerPinterestEcommerceEvent(ecommerce_data, options = {}) {
 			product_name: item.name,
 		})),
 	});
+}
+
+// ** Illumin ** //
+function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof aap === "undefined") {
+		throw new MasterworksTelemetryError("aap is undefined");
+	}
+
+	aap({ pixelKey: mw_telemetry_settings.illumin_pixel_id, pg: 23634, prodid: "donation", ordid: ecommerce_data.transaction_id, crev: ecommerce_data.total_transaction_amount, delay: 500 });
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
