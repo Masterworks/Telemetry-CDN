@@ -508,6 +508,23 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
 	aap({ pixelKey: mw_telemetry_settings.illumin_pixel_id, pg: 23634, prodid: "donation", ordid: ecommerce_data.transaction_id, crev: ecommerce_data.total_transaction_amount, delay: 500 });
 }
 
+// ** StackAdapt ** //
+function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof saq === "undefined") {
+		throw new MasterworksTelemetryError("saq is undefined");
+	}
+
+	if (!options.conversion_id || typeof options.conversion_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.conversion_id: " + options.conversion_id);
+	}
+
+	saq("conv", options.conversion_id, {
+		revenue: ecommerce_data.total_transaction_amount,
+		"order id": ecommerce_data.transaction_id,
+		"transaction type": ecommerce_data.items[0].category,
+	});
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
