@@ -242,6 +242,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "illumin":
 					triggerIlluminEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "stackadapt":
+					triggerStackAdaptEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
