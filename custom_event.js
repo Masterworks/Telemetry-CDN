@@ -44,7 +44,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			const handleEvent = () => configuration.platforms.forEach((platform) => handleErrors(() => handlePlatformEvent(platform, configuration)));
 
 			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
-				window.addEventListener("load", handleEvent);
+				handleEvent();
 			}
 
 			document.querySelectorAll(trigger.selector).forEach((element) => {
