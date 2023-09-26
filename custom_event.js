@@ -44,7 +44,9 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			const handleEvent = () => configuration.platforms.forEach((platform) => () => handlePlatformEvent(platform, configuration));
 
 			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
+				console.log("MasterworksTelemetry: Triggering custom event on load");
 				handleEvent();
+				return;
 			}
 
 			document.querySelectorAll(trigger.selector).forEach((element) => {
