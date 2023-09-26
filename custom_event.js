@@ -37,51 +37,46 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 		});
 
 		configuration.triggers.forEach((trigger) => {
-			let matchesCurrentURL = false;
-			if (trigger.urls) {
-				trigger.urls.forEach((url) => {
-					if (window.location.href.includes(url)) {
-						matchesCurrentURL = true;
-					}
-				});
-			} else {
-				matchesCurrentURL = true;
+			let matchesCurrentURL = trigger.urls ? trigger.urls.some((url) => window.location.href.includes(url)) : true;
+
+			if (!matchesCurrentURL) return;
+
+			const handleEvent = () => configuration.platforms.forEach((platform) => handleErrors(() => handlePlatformEvent(platform, configuration)));
+
+			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
+				window.addEventListener("load", handleEvent);
 			}
 
-			if (matchesCurrentURL) {
-				document.querySelectorAll(trigger.selector).forEach((element) => {
-					element.addEventListener(trigger.trigger_event, () => {
-						configuration.platforms.forEach(
-							handleErrors((platform) => {
-								switch (platform.name) {
-									case "rudderstack":
-										fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-										break;
-									case "piwik":
-										firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
-										break;
-									case "facebook":
-										fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-										break;
-									case "adform":
-										fireAdformCustomEvent(platform.event_type, configuration.event_name);
-										break;
-									case "zemanta":
-										fireZemantaCustomEvent(platform.event_type);
-										break;
-									case "tiktok":
-										fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-										break;
-									default:
-										throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
-								}
-							})
-						);
-					});
-				});
-			}
+			document.querySelectorAll(trigger.selector).forEach((element) => {
+				element.addEventListener(trigger.trigger_event, handleEvent);
+			});
 		});
 	});
+}
+
+function handlePlatformEvent(platform, configuration) {
+	switch (platform.name) {
+		case "rudderstack":
+			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		case "piwik":
+			firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
+			break;
+		case "facebook":
+			fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		case "adform":
+			fireAdformCustomEvent(platform.event_type, configuration.event_name);
+			break;
+		case "zemanta":
+			fireZemantaCustomEvent(platform.event_type);
+			break;
+		case "tiktok":
+			fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		default:
+			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
+	}
 }
 
 function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
