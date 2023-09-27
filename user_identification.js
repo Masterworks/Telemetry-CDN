@@ -42,7 +42,7 @@ class IdentificationConfiguration {
 					}
 
 					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue);
+					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
 					return;
 				}
 			}),
