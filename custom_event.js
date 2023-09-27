@@ -94,13 +94,17 @@ function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
 }
 
 function firePiwikCustomEvent(event_type, event_name, options = {}) {
-	if (typeof _paq === "undefined") {
-		throw new MasterworksTelemetryError("_paq is undefined");
-	}
-
 	if (options && options.matomo_conflict) {
+		if (typeof _ppas === "undefined") {
+			throw new MasterworksTelemetryError("_ppas is undefined");
+		}
+
 		_ppas.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	} else {
+		if (typeof _paq === "undefined") {
+			throw new MasterworksTelemetryError("_paq is undefined");
+		}
+
 		_paq.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	}
 }
