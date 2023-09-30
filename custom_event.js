@@ -58,7 +58,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 										fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 										break;
 									case "piwik":
-										firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
+										firePiwikCustomEvent(platform.event_type, configuration.event_name, platform.options);
 										break;
 									case "facebook":
 										fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
