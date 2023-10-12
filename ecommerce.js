@@ -245,6 +245,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "stackadapt":
 					triggerStackAdaptEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "bing":
+					triggerBingEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -525,6 +528,18 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
 		revenue: ecommerce_data.total_transaction_amount,
 		"order id": ecommerce_data.transaction_id,
 		"transaction type": ecommerce_data.items[0].category,
+	});
+}
+
+// ** BING ** //
+function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
+	window.uetq = window.uetq || [];
+	window.uetq.push("event", "donation", {
+		event_category: "donation submit",
+		event_label: "donation : submit",
+		event_value: ecommerce_data.total_transaction_amount,
+		revenue_value: ecommerce_data.total_transaction_amount,
+		currency: "USD",
 	});
 }
 
