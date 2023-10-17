@@ -402,6 +402,10 @@ function triggerTikTokEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** Taboola ** //
 function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("taboola_pixel_id is undefined");
+	}
+
 	_tfa.push({
 		notify: "event",
 		name: "Purchase",
@@ -412,12 +416,16 @@ function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** MNTN ** //
 function triggerMNTNEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof mw_telemetry_settings.mntn_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mntn_pixel_id is undefined");
+	}
+
 	(function () {
 		var x = null,
 			p,
 			q,
 			m,
-			o = "35484",
+			o = mw_telemetry_settings.mntn_pixel_id.toString(),
 			l = ecommerce_data.transaction_id,
 			i = ecommerce_data.total_transaction_amount,
 			c = "",
