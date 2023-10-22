@@ -519,7 +519,22 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
 
-	aap({ pixelKey: mw_telemetry_settings.illumin_pixel_id, pg: 23634, prodid: "donation", ordid: ecommerce_data.transaction_id, crev: ecommerce_data.total_transaction_amount, delay: 500 });
+	if (typeof mw_telemetry_settings.illumin_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("illumin_pixel_id is undefined");
+	}
+
+	if (!options.illumin_pg || typeof options.illumin_pg !== "number") {
+		throw new MasterworksTelemetryError("Invalid options.illumin_pg: " + options.illumin_pg);
+	}
+
+	aap({
+		pixelKey: mw_telemetry_settings.illumin_pixel_id,
+		pg: options.illumin_pg,
+		prodid: "donation",
+		ordid: ecommerce_data.transaction_id,
+		crev: ecommerce_data.total_transaction_amount,
+		delay: 500,
+	});
 }
 
 // ** StackAdapt ** //
