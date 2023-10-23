@@ -172,4 +172,17 @@ const fireIlluminCustomEvent = (illumin_pg) => {
 	if (typeof aap === "undefined") {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
+
+	if (typeof illumin_pg === "undefined") {
+		throw new MasterworksTelemetryError("illumin_pg is undefined");
+	}
+
+	if (typeof mw_telemetry_settings.illumin_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.illumin_pixel_id is undefined");
+	}
+
+	aap({
+		pixelKey: mw_telemetry_settings.illumin_pixel_id,
+		pg: illumin_pg,
+	});
 };
