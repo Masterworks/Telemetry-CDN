@@ -34,6 +34,10 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			if (!platform.event_type || typeof platform.event_type !== "string") {
 				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type: " + platform.event_type);
 			}
+
+			if (platform.name === "illumin" && !platform.illumin_pg && typeof platform.illumin_pg !== number) {
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg: " + platform.illumin_pg);
+			}
 		});
 
 		configuration.triggers.forEach((trigger) => {
@@ -70,6 +74,9 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 									break;
 								case "tiktok":
 									fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+									break;
+								case "illumin":
+									fireIlluminCustomEvent(platform.illumin_pg);
 									break;
 								default:
 									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
@@ -141,7 +148,7 @@ function fireAdformCustomEvent(event_type, event_name) {
 	})();
 }
 
-fireZemantaCustomEvent = (event_type) => {
+const fireZemantaCustomEvent = (event_type) => {
 	if (typeof zemApi === "undefined") {
 		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
@@ -150,7 +157,7 @@ fireZemantaCustomEvent = (event_type) => {
 	zemApi("track", event_type);
 };
 
-fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
+const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined");
 	}
@@ -159,4 +166,10 @@ fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 		content_name: event_name,
 		...metadata,
 	});
+};
+
+const fireIlluminCustomEvent = (illumin_pg) => {
+	if (typeof aap === "undefined") {
+		throw new MasterworksTelemetryError("aap is undefined");
+	}
 };
