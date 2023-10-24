@@ -251,6 +251,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "bing":
 					triggerBingEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "tradedesk":
+					triggerTradeDeskEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -582,7 +585,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 	ttd_dom_ready(function () {
 		if (typeof TTDUniversalPixelApi === "function") {
 			var universalPixelApi = new TTDUniversalPixelApi();
-			universalPixelApi.init(mw_telemetry_settings.tradedesk_advertiser_id, [mw_telemetry_settings.tradedesk_advertiser_id], "https://insight.adsrvr.org/track/up", {
+			universalPixelApi.init(mw_telemetry_settings.tradedesk_advertiser_id, [mw_telemetry_settings.tradedesk_upixel_id], "https://insight.adsrvr.org/track/up", {
 				orderid: ecommerce_data.transaction_id,
 				v: ecommerce_data.total_transaction_amount,
 				vf: "USD",
