@@ -569,6 +569,29 @@ function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
 	});
 }
 
+// ** TradeDesk ** //
+function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
+	if (mw_telemetry_settings.tradedesk_upixel_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_upixel_id is undefined");
+	}
+
+	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
+	}
+
+	ttd_dom_ready(function () {
+		if (typeof TTDUniversalPixelApi === "function") {
+			var universalPixelApi = new TTDUniversalPixelApi();
+			universalPixelApi.init(mw_telemetry_settings.tradedesk_advertiser_id, [mw_telemetry_settings.tradedesk_advertiser_id], "https://insight.adsrvr.org/track/up", {
+				orderid: ecommerce_data.transaction_id,
+				v: ecommerce_data.total_transaction_amount,
+				vf: "USD",
+				td1: ecommerce_data.items[0].category,
+			});
+		}
+	});
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
