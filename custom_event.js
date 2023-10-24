@@ -55,6 +55,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			if (matchesCurrentURL) {
 				document.querySelectorAll(trigger.selector).forEach((element) => {
 					element.addEventListener(trigger.trigger_event, () => {
+						writeEventToDataLayer(configuration.event_name, configuration.metadata);
 						configuration.platforms.forEach((platform) => {
 							switch (platform.name) {
 								case "rudderstack":
@@ -184,5 +185,14 @@ const fireIlluminCustomEvent = (illumin_pg) => {
 	aap({
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
+	});
+};
+
+const writeEventToDataLayer = (event_name, metadata = {}) => {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_custom_event_telemetry",
+		event_name: event_name,
+		metadata: metadata,
 	});
 };

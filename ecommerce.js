@@ -206,6 +206,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 		ecommerce_data.transaction_id = generateTransactionID();
 	}
 
+	// write transaction data to dataLayer
+	writeTransactionDataLayerEvent(ecommerce_data);
+
 	configuration.platforms.forEach((platform) => {
 		try {
 			switch (platform.name) {
@@ -604,4 +607,12 @@ function writeCookie(name, value, expiryTimeInMinutes) {
 	const expiryTimeInMilliseconds = expiryTimeInMinutes * 60 * 1000;
 	expiryDate.setTime(currentDate.getTime() + expiryTimeInMilliseconds);
 	document.cookie = name + "=" + value + ";" + "expires=" + expiryDate.toGMTString() + ";path=/";
+}
+
+function writeTransactionDataLayerEvent(ecommerce_data) {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_ecommerce_transaction",
+		data: ecommerce_data,
+	});
 }
