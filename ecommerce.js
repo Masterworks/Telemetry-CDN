@@ -254,6 +254,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "tradedesk":
 					triggerTradeDeskEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "linkedin":
+					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -591,6 +594,19 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 			td1: ecommerce_data.items[0].category,
 		});
 	}
+}
+
+// ** LinkedIn ** //
+function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof window.lintrk === "undefined") {
+		throw new MasterworksTelemetryError("window.lintrk is undefined");
+	}
+
+	if (typeof options.linkedin_conversion_id === "undefined") {
+		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined");
+	}
+
+	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
