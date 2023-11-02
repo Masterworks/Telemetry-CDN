@@ -577,23 +577,31 @@ function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** TradeDesk ** //
 function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
-	if (mw_telemetry_settings.tradedesk_upixel_id === undefined) {
-		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_upixel_id is undefined");
+	if (mw_telemetry_settings.tradedesk_tracking_tag_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_tracking_tag_id is undefined");
 	}
 
 	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
 		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
 	}
 
-	if (typeof TTDUniversalPixelApi === "function") {
-		var universalPixelApi = new TTDUniversalPixelApi();
-		universalPixelApi.init(mw_telemetry_settings.tradedesk_advertiser_id, [mw_telemetry_settings.tradedesk_upixel_id], "https://insight.adsrvr.org/track/up", {
-			orderid: ecommerce_data.transaction_id,
-			v: ecommerce_data.total_transaction_amount,
-			vf: "USD",
-			td1: ecommerce_data.items[0].category,
-		});
-	}
+	var img = document.createElement("img");
+	img.setAttribute("height", "1");
+	img.setAttribute("width", "1");
+	img.setAttribute("style", "border-style:none;");
+	img.setAttribute("alt", "");
+	img.setAttribute(
+		"src",
+		`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${mw_telemetry_settings.tradedesk_tracking_tag_id}&fmt=3&orderid=` +
+			ecommerce_data.transaction_id +
+			"&td1=" +
+			ecommerce_data.items[0].category +
+			"&v=" +
+			ecommerce_data.total_transaction_amount +
+			"&vf=" +
+			"USD"
+	);
+	document.body.appendChild(img);
 }
 
 // ** LinkedIn ** //
