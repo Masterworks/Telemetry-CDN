@@ -79,6 +79,9 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 								case "illumin":
 									fireIlluminCustomEvent(platform.illumin_pg);
 									break;
+								case "google_ads":
+									fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
+									break;
 								default:
 									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 							}
@@ -186,6 +189,22 @@ const fireIlluminCustomEvent = (illumin_pg) => {
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
 	});
+};
+
+const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
+	if (typeof gtag === "undefined") {
+		throw new MasterworksTelemetryError("gtag is undefined");
+	}
+
+	if (!options.google_ads_send_to_ids || !Array.isArray(options.google_ads_send_to_ids) || options.google_ads_send_to_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids);
+	}
+
+	for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
+		gtag("event", event_type, {
+			send_to: options.google_ads_send_to_ids[i],
+		});
+	}
 };
 
 const writeEventToDataLayer = (event_name, metadata = {}) => {
