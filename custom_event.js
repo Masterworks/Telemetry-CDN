@@ -82,6 +82,9 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 								case "google_ads":
 									fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
 									break;
+								case "taboola":
+									fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
+									break;
 								default:
 									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 							}
@@ -205,6 +208,18 @@ const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
 			send_to: options.google_ads_send_to_ids[i],
 		});
 	}
+};
+
+const fireTaboolaCustomEvent = (event_type, event_name) => {
+	if (typeof _tfa === "undefined") {
+		throw new MasterworksTelemetryError("_tfa is undefined");
+	}
+
+	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.taboola_pixel_id is undefined");
+	}
+
+	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
 };
 
 const writeEventToDataLayer = (event_name, metadata = {}) => {
