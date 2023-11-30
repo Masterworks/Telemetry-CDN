@@ -1,12 +1,3 @@
-const writeEventToDataLayer = (event_name, metadata = {}) => {
-	let dataLayer = window.dataLayer || [];
-	dataLayer.push({
-		event: "mw_custom_event_telemetry",
-		event_name: event_name,
-		metadata: metadata,
-	});
-};
-
 if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0) {
 	mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
 		if (!configuration.event_name || typeof configuration.event_name !== "string") {
@@ -164,16 +155,16 @@ function fireAdformCustomEvent(event_type, event_name) {
 	})();
 }
 
-const fireZemantaCustomEvent = (event_type) => {
+function fireZemantaCustomEvent(event_type) {
 	if (typeof zemApi === "undefined") {
 		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
 
 	// Track Event
 	zemApi("track", event_type);
-};
+}
 
-const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
+function fireTiktokCustomEvent(event_type, event_name, metadata = {}) {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined");
 	}
@@ -182,9 +173,9 @@ const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 		content_name: event_name,
 		...metadata,
 	});
-};
+}
 
-const fireIlluminCustomEvent = (illumin_pg) => {
+function fireIlluminCustomEvent(illumin_pg) {
 	if (typeof aap === "undefined") {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
@@ -201,9 +192,9 @@ const fireIlluminCustomEvent = (illumin_pg) => {
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
 	});
-};
+}
 
-const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
+function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
 	if (typeof gtag === "undefined") {
 		throw new MasterworksTelemetryError("gtag is undefined");
 	}
@@ -217,9 +208,9 @@ const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
 			send_to: options.google_ads_send_to_ids[i],
 		});
 	}
-};
+}
 
-const fireTaboolaCustomEvent = (event_type, event_name) => {
+function fireTaboolaCustomEvent(event_type, event_name) {
 	if (typeof _tfa === "undefined") {
 		throw new MasterworksTelemetryError("_tfa is undefined");
 	}
@@ -229,4 +220,13 @@ const fireTaboolaCustomEvent = (event_type, event_name) => {
 	}
 
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
-};
+}
+
+function writeEventToDataLayer(event_name, metadata = {}) {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_custom_event_telemetry",
+		event_name: event_name,
+		metadata: metadata,
+	});
+}
