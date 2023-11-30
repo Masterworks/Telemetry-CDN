@@ -1,3 +1,12 @@
+const writeEventToDataLayer = (event_name, metadata = {}) => {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_custom_event_telemetry",
+		event_name: event_name,
+		metadata: metadata,
+	});
+};
+
 if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0) {
 	mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
 		if (!configuration.event_name || typeof configuration.event_name !== "string") {
@@ -44,11 +53,11 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			let matchesCurrentURL = trigger.urls ? trigger.urls.some((url) => window.location.href.includes(url)) : true;
 
 			if (!matchesCurrentURL) return;
-      
+
 			const handleEvent = () => {
-        writeEventToDataLayer(configuration.event_name, configuration.metadata)
-        return configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration))
-      };
+				writeEventToDataLayer(configuration.event_name, configuration.metadata);
+				return configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration));
+			};
 
 			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
 				handleEvent();
@@ -82,15 +91,15 @@ function handlePlatformEvent(platform, configuration) {
 		case "tiktok":
 			fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 			break;
-    case "illumin":
+		case "illumin":
 			fireIlluminCustomEvent(platform.illumin_pg);
-		  break;
-    case "google_ads":
-      fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
-      break;
-    case "taboola":
-      fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
-      break;
+			break;
+		case "google_ads":
+			fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
+			break;
+		case "taboola":
+			fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -220,13 +229,4 @@ const fireTaboolaCustomEvent = (event_type, event_name) => {
 	}
 
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
-};
-
-const writeEventToDataLayer = (event_name, metadata = {}) => {
-	let dataLayer = window.dataLayer || [];
-	dataLayer.push({
-		event: "mw_custom_event_telemetry",
-		event_name: event_name,
-		metadata: metadata,
-	});
 };
