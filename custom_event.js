@@ -41,59 +41,59 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 		});
 
 		configuration.triggers.forEach((trigger) => {
-			let matchesCurrentURL = false;
-			if (trigger.urls) {
-				trigger.urls.forEach((url) => {
-					if (window.location.href.includes(url)) {
-						matchesCurrentURL = true;
-					}
-				});
-			} else {
-				matchesCurrentURL = true;
+			let matchesCurrentURL = trigger.urls ? trigger.urls.some((url) => window.location.href.includes(url)) : true;
+
+			if (!matchesCurrentURL) return;
+
+			const handleEvent = () => {
+				writeEventToDataLayer(configuration.event_name, configuration.metadata);
+				return configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration));
+			};
+
+			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
+				handleEvent();
+				return;
 			}
 
-			if (matchesCurrentURL) {
-				document.querySelectorAll(trigger.selector).forEach((element) => {
-					element.addEventListener(trigger.trigger_event, () => {
-						writeEventToDataLayer(configuration.event_name, configuration.metadata);
-						configuration.platforms.forEach((platform) => {
-							switch (platform.name) {
-								case "rudderstack":
-									fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								case "piwik":
-									firePiwikCustomEvent(platform.event_type, configuration.event_name, platform.options);
-									break;
-								case "facebook":
-									fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								case "adform":
-									fireAdformCustomEvent(platform.event_type, configuration.event_name);
-									break;
-								case "zemanta":
-									fireZemantaCustomEvent(platform.event_type);
-									break;
-								case "tiktok":
-									fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
-									break;
-								case "illumin":
-									fireIlluminCustomEvent(platform.illumin_pg);
-									break;
-								case "google_ads":
-									fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
-									break;
-								case "taboola":
-									fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
-									break;
-								default:
-									throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
-							}
-						});
-					});
-				});
-			}
+			document.querySelectorAll(trigger.selector).forEach((element) => {
+				element.addEventListener(trigger.trigger_event, handleEvent);
+			});
 		});
 	});
+}
+
+function handlePlatformEvent(platform, configuration) {
+	switch (platform.name) {
+		case "rudderstack":
+			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		case "piwik":
+			firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
+			break;
+		case "facebook":
+			fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		case "adform":
+			fireAdformCustomEvent(platform.event_type, configuration.event_name);
+			break;
+		case "zemanta":
+			fireZemantaCustomEvent(platform.event_type);
+			break;
+		case "tiktok":
+			fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			break;
+		case "illumin":
+			fireIlluminCustomEvent(platform.illumin_pg);
+			break;
+		case "google_ads":
+			fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
+			break;
+		case "taboola":
+			fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
+			break;
+		default:
+			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
+	}
 }
 
 function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
@@ -155,16 +155,16 @@ function fireAdformCustomEvent(event_type, event_name) {
 	})();
 }
 
-const fireZemantaCustomEvent = (event_type) => {
+function fireZemantaCustomEvent(event_type) {
 	if (typeof zemApi === "undefined") {
 		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
 
 	// Track Event
 	zemApi("track", event_type);
-};
+}
 
-const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
+function fireTiktokCustomEvent(event_type, event_name, metadata = {}) {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined");
 	}
@@ -173,9 +173,9 @@ const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 		content_name: event_name,
 		...metadata,
 	});
-};
+}
 
-const fireIlluminCustomEvent = (illumin_pg) => {
+function fireIlluminCustomEvent(illumin_pg) {
 	if (typeof aap === "undefined") {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
@@ -192,9 +192,9 @@ const fireIlluminCustomEvent = (illumin_pg) => {
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
 	});
-};
+}
 
-const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
+function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
 	if (typeof gtag === "undefined") {
 		throw new MasterworksTelemetryError("gtag is undefined");
 	}
@@ -208,9 +208,9 @@ const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
 			send_to: options.google_ads_send_to_ids[i],
 		});
 	}
-};
+}
 
-const fireTaboolaCustomEvent = (event_type, event_name) => {
+function fireTaboolaCustomEvent(event_type, event_name) {
 	if (typeof _tfa === "undefined") {
 		throw new MasterworksTelemetryError("_tfa is undefined");
 	}
@@ -220,13 +220,13 @@ const fireTaboolaCustomEvent = (event_type, event_name) => {
 	}
 
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
-};
+}
 
-const writeEventToDataLayer = (event_name, metadata = {}) => {
+function writeEventToDataLayer(event_name, metadata = {}) {
 	let dataLayer = window.dataLayer || [];
 	dataLayer.push({
 		event: "mw_custom_event_telemetry",
 		event_name: event_name,
 		metadata: metadata,
 	});
-};
+}
