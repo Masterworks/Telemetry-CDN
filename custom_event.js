@@ -34,17 +34,23 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			if (!platform.event_type || typeof platform.event_type !== "string") {
 				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type: " + platform.event_type);
 			}
+
+			if (platform.name === "illumin" && !platform.illumin_pg && typeof platform.illumin_pg !== number) {
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg: " + platform.illumin_pg);
+			}
 		});
 
 		configuration.triggers.forEach((trigger) => {
 			let matchesCurrentURL = trigger.urls ? trigger.urls.some((url) => window.location.href.includes(url)) : true;
 
 			if (!matchesCurrentURL) return;
-
-			const handleEvent = () => configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration));
+      
+			const handleEvent = () => {
+        writeEventToDataLayer(configuration.event_name, configuration.metadata)
+        return configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration))
+      };
 
 			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
-				console.log("MasterworksTelemetry: Triggering custom event on load");
 				handleEvent();
 				return;
 			}
@@ -76,6 +82,15 @@ function handlePlatformEvent(platform, configuration) {
 		case "tiktok":
 			fireTiktokCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 			break;
+    case "illumin":
+			fireIlluminCustomEvent(platform.illumin_pg);
+		  break;
+    case "google_ads":
+      fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
+      break;
+    case "taboola":
+      fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
+      break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -91,13 +106,17 @@ function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
 }
 
 function firePiwikCustomEvent(event_type, event_name, options = {}) {
-	if (typeof _paq === "undefined") {
-		throw new MasterworksTelemetryError("_paq is undefined");
-	}
-
 	if (options && options.matomo_conflict) {
+		if (typeof _ppas === "undefined") {
+			throw new MasterworksTelemetryError("_ppas is undefined");
+		}
+
 		_ppas.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	} else {
+		if (typeof _paq === "undefined") {
+			throw new MasterworksTelemetryError("_paq is undefined");
+		}
+
 		_paq.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	}
 }
@@ -136,7 +155,7 @@ function fireAdformCustomEvent(event_type, event_name) {
 	})();
 }
 
-fireZemantaCustomEvent = (event_type) => {
+const fireZemantaCustomEvent = (event_type) => {
 	if (typeof zemApi === "undefined") {
 		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
@@ -145,7 +164,7 @@ fireZemantaCustomEvent = (event_type) => {
 	zemApi("track", event_type);
 };
 
-fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
+const fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined");
 	}
@@ -153,5 +172,61 @@ fireTiktokCustomEvent = (event_type, event_name, metadata = {}) => {
 	ttq.track(event_type, {
 		content_name: event_name,
 		...metadata,
+	});
+};
+
+const fireIlluminCustomEvent = (illumin_pg) => {
+	if (typeof aap === "undefined") {
+		throw new MasterworksTelemetryError("aap is undefined");
+	}
+
+	if (typeof illumin_pg === "undefined") {
+		throw new MasterworksTelemetryError("illumin_pg is undefined");
+	}
+
+	if (typeof mw_telemetry_settings.illumin_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.illumin_pixel_id is undefined");
+	}
+
+	aap({
+		pixelKey: mw_telemetry_settings.illumin_pixel_id,
+		pg: illumin_pg,
+	});
+};
+
+const fireGoogleAdsCustomEvent = (event_type, event_name, options = {}) => {
+	if (typeof gtag === "undefined") {
+		throw new MasterworksTelemetryError("gtag is undefined");
+	}
+
+	if (!options.google_ads_send_to_ids || !Array.isArray(options.google_ads_send_to_ids) || options.google_ads_send_to_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids);
+	}
+
+	for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
+		gtag("event", event_type, {
+			send_to: options.google_ads_send_to_ids[i],
+		});
+	}
+};
+
+const fireTaboolaCustomEvent = (event_type, event_name) => {
+	if (typeof _tfa === "undefined") {
+		throw new MasterworksTelemetryError("_tfa is undefined");
+	}
+
+	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.taboola_pixel_id is undefined");
+	}
+
+	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
+};
+
+const writeEventToDataLayer = (event_name, metadata = {}) => {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_custom_event_telemetry",
+		event_name: event_name,
+		metadata: metadata,
 	});
 };

@@ -35,17 +35,17 @@ class IdentificationConfiguration {
 	setIdentificationEvents() {
 		document.body.addEventListener(
 			"blur",
-			handleErrors((event) => {
+			(event) => {
 				for (let i = 0; i < this.configuration.selectors.length; i++) {
 					if (!event.target.matches(this.configuration.selectors[i])) {
 						continue; // Ignore if not matching selector
 					}
 
 					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue);
+					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
 					return;
 				}
-			}),
+			},
 			true
 		);
 	}
@@ -60,12 +60,7 @@ class IdentificationConfiguration {
 
 const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
 if (indentificationConfiguration.configuration.timeout) {
-	setTimeout(
-		handleErrors(() => {
-			indentificationConfiguration.setIdentificationEvents();
-		}),
-		indentificationConfiguration.configuration.timeout
-	);
+	setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
 } else {
-	handleErrors(indentificationConfiguration.setIdentificationEvents());
+	indentificationConfiguration.setIdentificationEvents();
 }

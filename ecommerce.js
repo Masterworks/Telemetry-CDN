@@ -206,6 +206,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 		ecommerce_data.transaction_id = generateTransactionID();
 	}
 
+	// write transaction data to dataLayer
+	writeTransactionDataLayerEvent(ecommerce_data);
+
 	configuration.platforms.forEach((platform) => {
 		try {
 			switch (platform.name) {
@@ -245,6 +248,15 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "stackadapt":
 					triggerStackAdaptEcommerceEvent(ecommerce_data, platform.options);
 					break;
+				case "bing":
+					triggerBingEcommerceEvent(ecommerce_data, platform.options);
+					break;
+				case "tradedesk":
+					triggerTradeDeskEcommerceEvent(ecommerce_data, platform.options);
+					break;
+				case "linkedin":
+					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -267,7 +279,7 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}) {
 	rudderanalytics.track("Order Completed", {
 		order_id: ecommerce_data.transaction_id,
 		currency: "USD",
-		total: ecommerce_data.total_transaction_amount,
+		revenue: ecommerce_data.total_transaction_amount,
 		products: ecommerce_data.items,
 	});
 }
@@ -399,6 +411,10 @@ function triggerTikTokEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** Taboola ** //
 function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("taboola_pixel_id is undefined");
+	}
+
 	_tfa.push({
 		notify: "event",
 		name: "Purchase",
@@ -409,12 +425,16 @@ function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** MNTN ** //
 function triggerMNTNEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof mw_telemetry_settings.mntn_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mntn_pixel_id is undefined");
+	}
+
 	(function () {
 		var x = null,
 			p,
 			q,
 			m,
-			o = "35484",
+			o = mw_telemetry_settings.mntn_pixel_id.toString(),
 			l = ecommerce_data.transaction_id,
 			i = ecommerce_data.total_transaction_amount,
 			c = "",
@@ -508,7 +528,22 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
 
-	aap({ pixelKey: mw_telemetry_settings.illumin_pixel_id, pg: 23634, prodid: "donation", ordid: ecommerce_data.transaction_id, crev: ecommerce_data.total_transaction_amount, delay: 500 });
+	if (typeof mw_telemetry_settings.illumin_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("illumin_pixel_id is undefined");
+	}
+
+	if (!options.illumin_pg || typeof options.illumin_pg !== "number") {
+		throw new MasterworksTelemetryError("Invalid options.illumin_pg: " + options.illumin_pg);
+	}
+
+	aap({
+		pixelKey: mw_telemetry_settings.illumin_pixel_id,
+		pg: options.illumin_pg,
+		prodid: "donation",
+		ordid: ecommerce_data.transaction_id,
+		crev: ecommerce_data.total_transaction_amount,
+		delay: 500,
+	});
 }
 
 // ** StackAdapt ** //
@@ -526,6 +561,60 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
 		"order id": ecommerce_data.transaction_id,
 		"transaction type": ecommerce_data.items[0].category,
 	});
+}
+
+// ** BING ** //
+function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
+	window.uetq = window.uetq || [];
+	window.uetq.push("event", "donation", {
+		event_category: "donation submit",
+		event_label: "donation : submit",
+		event_value: ecommerce_data.total_transaction_amount,
+		revenue_value: ecommerce_data.total_transaction_amount,
+		currency: "USD",
+	});
+}
+
+// ** TradeDesk ** //
+function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
+	if (mw_telemetry_settings.tradedesk_tracking_tag_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_tracking_tag_id is undefined");
+	}
+
+	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
+	}
+
+	var img = document.createElement("img");
+	img.setAttribute("height", "1");
+	img.setAttribute("width", "1");
+	img.setAttribute("style", "border-style:none;");
+	img.setAttribute("alt", "");
+	img.setAttribute(
+		"src",
+		`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${mw_telemetry_settings.tradedesk_tracking_tag_id}&fmt=3&orderid=` +
+			ecommerce_data.transaction_id +
+			"&td1=" +
+			ecommerce_data.items[0].category +
+			"&v=" +
+			ecommerce_data.total_transaction_amount +
+			"&vf=" +
+			"USD"
+	);
+	document.body.appendChild(img);
+}
+
+// ** LinkedIn ** //
+function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}) {
+	if (typeof window.lintrk === "undefined") {
+		throw new MasterworksTelemetryError("window.lintrk is undefined");
+	}
+
+	if (typeof options.linkedin_conversion_id === "undefined") {
+		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined");
+	}
+
+	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
@@ -566,4 +655,12 @@ function writeCookie(name, value, expiryTimeInMinutes) {
 	const expiryTimeInMilliseconds = expiryTimeInMinutes * 60 * 1000;
 	expiryDate.setTime(currentDate.getTime() + expiryTimeInMilliseconds);
 	document.cookie = name + "=" + value + ";" + "expires=" + expiryDate.toGMTString() + ";path=/";
+}
+
+function writeTransactionDataLayerEvent(ecommerce_data) {
+	let dataLayer = window.dataLayer || [];
+	dataLayer.push({
+		event: "mw_ecommerce_transaction",
+		data: ecommerce_data,
+	});
 }

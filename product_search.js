@@ -65,15 +65,13 @@ class ProductSearchConfiguration {
 }
 
 if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
-	mw_telemetry_settings.product_search_configurations.forEach(
-		handleErrors((configuration) => {
-			const productSearchConfiguration = new ProductSearchConfiguration(configuration);
+	mw_telemetry_settings.product_search_configurations.forEach((configuration) => {
+		const productSearchConfiguration = new ProductSearchConfiguration(configuration);
 
-			if (!productSearchConfiguration.matchesCurrentURL()) {
-				return;
-			}
+		if (!productSearchConfiguration.matchesCurrentURL()) {
+			return;
+		}
 
-			productSearchConfiguration.fireProductSearchEvent();
-		})
-	);
+		productSearchConfiguration.fireProductSearchEvent();
+	});
 }
