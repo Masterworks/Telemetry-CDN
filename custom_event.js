@@ -91,6 +91,8 @@ function handlePlatformEvent(platform, configuration) {
 		case "taboola":
 			fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
 			break;
+		case "twitter":
+			fireTwitterCustomEvent(platform.event_type);
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -220,6 +222,14 @@ function fireTaboolaCustomEvent(event_type, event_name) {
 	}
 
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
+}
+
+function fireTwitterCustomEvent(event_type) {
+	if (typeof twq === "undefined") {
+		throw new MasterworksTelemetryError("twq is undefined");
+	}
+
+	twq("track", event_type);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
