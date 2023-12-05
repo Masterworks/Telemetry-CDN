@@ -93,6 +93,10 @@ function handlePlatformEvent(platform, configuration) {
 			break;
 		case "twitter":
 			fireTwitterCustomEvent(platform.event_type);
+			break;
+		case "reddit":
+			fireRedditCustomEvent(platform.event_type);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -230,6 +234,14 @@ function fireTwitterCustomEvent(event_type) {
 	}
 
 	twq("track", event_type);
+}
+
+function fireRedditCustomEvent(event_type) {
+	if (typeof rdt === "undefined") {
+		throw new MasterworksTelemetryError("rdt is undefined");
+	}
+
+	rdt("track", event_type);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
