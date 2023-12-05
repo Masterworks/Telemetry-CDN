@@ -68,7 +68,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
 			break;
 		case "piwik":
-			firePiwikCustomEvent(platform.event_type, configuration.event_name, configuration.options);
+			firePiwikCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
 		case "facebook":
 			fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
