@@ -97,6 +97,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "reddit":
 			fireRedditCustomEvent(platform.event_type);
 			break;
+		case "pinterest":
+			firePinterestCustomEvent(platform.event_type);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -242,6 +245,14 @@ function fireRedditCustomEvent(event_type) {
 	}
 
 	rdt("track", event_type);
+}
+
+function firePinterestCustomEvent(event_type) {
+	if (typeof pintrk === "undefined") {
+		throw new MasterworksTelemetryError("pintrk is undefined");
+	}
+
+	pintrk("track", event_type);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
