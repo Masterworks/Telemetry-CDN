@@ -20,6 +20,12 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			if (trigger.urls && (!Array.isArray(trigger.urls) || trigger.urls.length === 0)) {
 				throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.urls: " + trigger.urls);
 			}
+
+			if (trigger.timeout) {
+				if (typeof trigger.timeout !== "number") {
+					throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.timeout: " + trigger.timeout);
+				}
+			}
 		});
 
 		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
@@ -56,10 +62,6 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			}
 
 			if (trigger.timeout) {
-				if (typeof trigger.timeout !== "number") {
-					throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.timeout: " + trigger.timeout);
-				}
-
 				setTimeout(() => {
 					document.querySelectorAll(trigger.selector).forEach((element) => {
 						element.addEventListener(trigger.trigger_event, handleEvent);
