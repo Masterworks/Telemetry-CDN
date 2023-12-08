@@ -55,6 +55,15 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 				return;
 			}
 
+			if (trigger.timeout) {
+				setTimeout(() => {
+					document.querySelectorAll(trigger.selector).forEach((element) => {
+						element.addEventListener(trigger.trigger_event, handleEvent);
+					});
+				}, trigger.timeout);
+				return;
+			}
+
 			document.querySelectorAll(trigger.selector).forEach((element) => {
 				element.addEventListener(trigger.trigger_event, handleEvent);
 			});
