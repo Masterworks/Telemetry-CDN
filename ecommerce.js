@@ -577,31 +577,33 @@ function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
 
 // ** TradeDesk ** //
 function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
-	if (mw_telemetry_settings.tradedesk_tracking_tag_id === undefined) {
-		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_tracking_tag_id is undefined");
-	}
-
 	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
 		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
 	}
 
-	var img = document.createElement("img");
-	img.setAttribute("height", "1");
-	img.setAttribute("width", "1");
-	img.setAttribute("style", "border-style:none;");
-	img.setAttribute("alt", "");
-	img.setAttribute(
-		"src",
-		`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${mw_telemetry_settings.tradedesk_tracking_tag_id}&fmt=3&orderid=` +
-			ecommerce_data.transaction_id +
-			"&td1=" +
-			ecommerce_data.items[0].category +
-			"&v=" +
-			ecommerce_data.total_transaction_amount +
-			"&vf=" +
-			"USD"
-	);
-	document.body.appendChild(img);
+	if (options.tradedesk_tracking_tag_ids === undefined || !Array.isArray(options.tradedesk_tracking_tag_ids) || options.tradedesk_tracking_tag_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.tradedesk_tracking_tag_ids: " + options.tradedesk_tracking_tag_ids);
+	}
+
+	for (let i = 0; i < options.tradedesk_tracking_tag_ids.length; i++) {
+		var img = document.createElement("img");
+		img.setAttribute("height", "1");
+		img.setAttribute("width", "1");
+		img.setAttribute("style", "border-style:none;");
+		img.setAttribute("alt", "");
+		img.setAttribute(
+			"src",
+			`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_tracking_tag_ids[i]}&fmt=3&orderid=` +
+				ecommerce_data.transaction_id +
+				"&td1=" +
+				ecommerce_data.items[0].category +
+				"&v=" +
+				ecommerce_data.total_transaction_amount +
+				"&vf=" +
+				"USD"
+		);
+		document.body.appendChild(img);
+	}
 }
 
 // ** LinkedIn ** //
