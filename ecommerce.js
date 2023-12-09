@@ -619,7 +619,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 							ecommerce_data.transaction_id +
 							"&td1=sustainer" +
 							"&v=" +
-							ecommerce_data.items[i].amount +
+							ecommerce_data.items[i].price +
 							"&vf=" +
 							"USD"
 					);
