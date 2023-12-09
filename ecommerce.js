@@ -595,14 +595,38 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 			"src",
 			`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_tracking_tag_ids[i]}&fmt=3&orderid=` +
 				ecommerce_data.transaction_id +
-				"&td1=" +
-				ecommerce_data.items[0].category +
+				"&td1=donation" +
 				"&v=" +
 				ecommerce_data.total_transaction_amount +
 				"&vf=" +
 				"USD"
 		);
 		document.body.appendChild(img);
+	}
+
+	if (options.tradedesk_sustainer_tracking_tag_ids !== undefined && Array.isArray(options.tradedesk_sustainer_tracking_tag_ids) && options.tradedesk_sustainer_tracking_tag_ids.length > 0) {
+		for (let i = 0; i < ecommerce_data.items.length; i++) {
+			if (ecommerce_data.items[i].category === "sustainer") {
+				for (let j = 0; j < options.tradedesk_sustainer_tracking_tag_ids.length; j++) {
+					var img = document.createElement("img");
+					img.setAttribute("height", "1");
+					img.setAttribute("width", "1");
+					img.setAttribute("style", "border-style:none;");
+					img.setAttribute("alt", "");
+					img.setAttribute(
+						"src",
+						`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_sustainer_tracking_tag_ids[j]}&fmt=3&orderid=` +
+							ecommerce_data.transaction_id +
+							"&td1=sustainer" +
+							"&v=" +
+							ecommerce_data.items[i].amount +
+							"&vf=" +
+							"USD"
+					);
+					document.body.appendChild(img);
+				}
+			}
+		}
 	}
 }
 
