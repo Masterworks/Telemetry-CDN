@@ -213,49 +213,49 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 		try {
 			switch (platform.name) {
 				case "rudderstack":
-					triggerRudderstackEcommerceEvent(ecommerce_data, platform.options);
+					triggerRudderstackEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "piwik":
-					triggerPiwikEcommerceEvent(ecommerce_data, platform.options);
+					triggerPiwikEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "facebook":
-					triggerFacebookEcommerceEvents(ecommerce_data, platform.options);
+					triggerFacebookEcommerceEvents(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "adform":
-					triggerAdformEcommerceEvent(ecommerce_data, platform.options);
+					triggerAdformEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "zemanta":
-					triggerZemantaEcommerceEvent(ecommerce_data, platform.options);
+					triggerZemantaEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "google_ads":
-					triggerGoogleAdsEcommerceEvent(ecommerce_data, platform.options);
+					triggerGoogleAdsEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "tiktok":
-					triggerTikTokEcommerceEvent(ecommerce_data, platform.options);
+					triggerTikTokEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "mntn":
-					triggerMNTNEcommerceEvent(ecommerce_data, platform.options);
+					triggerMNTNEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "taboola":
-					triggerTaboolaEcommerceEvent(ecommerce_data, platform.options);
+					triggerTaboolaEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "pinterest":
-					triggerPinterestEcommerceEvent(ecommerce_data, platform.options);
+					triggerPinterestEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "illumin":
-					triggerIlluminEcommerceEvent(ecommerce_data, platform.options);
+					triggerIlluminEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "stackadapt":
-					triggerStackAdaptEcommerceEvent(ecommerce_data, platform.options);
+					triggerStackAdaptEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "bing":
-					triggerBingEcommerceEvent(ecommerce_data, platform.options);
+					triggerBingEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "tradedesk":
-					triggerTradeDeskEcommerceEvent(ecommerce_data, platform.options);
+					triggerTradeDeskEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "linkedin":
-					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options);
+					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
@@ -271,12 +271,12 @@ function generateTransactionID() {
 }
 
 // ** Rudderstack ** //
-function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}) {
+function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_type = "Order Completed") {
 	if (typeof rudderanalytics === "undefined") {
 		throw new MasterworksTelemetryError("rudderanalytics is not defined");
 	}
 
-	rudderanalytics.track("Order Completed", {
+	rudderanalytics.track(event_type, {
 		order_id: ecommerce_data.transaction_id,
 		currency: "USD",
 		revenue: ecommerce_data.total_transaction_amount,
@@ -285,7 +285,7 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** Piwik ** //
-function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
+function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "trackEcommerceOrder") {
 	if (options.matomo_conflict) {
 		if (typeof _ppas === "undefined") {
 			throw new MasterworksTelemetryError("_ppas is undefined");
@@ -295,7 +295,7 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
 			_ppas.push(["addEcommerceItem", item.sku, item.name, item.category, item.price, item.quantity]);
 		});
 
-		_ppas.push(["trackEcommerceOrder", ecommerce_data.transaction_id, ecommerce_data.total_transaction_amount]);
+		_ppas.push([event_type, ecommerce_data.transaction_id, ecommerce_data.total_transaction_amount]);
 		return;
 	}
 
@@ -307,12 +307,12 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}) {
 		_paq.push(["addEcommerceItem", item.sku, item.name, item.category, item.price, item.quantity]);
 	});
 
-	_paq.push(["trackEcommerceOrder", ecommerce_data.transaction_id, ecommerce_data.total_transaction_amount]);
+	_paq.push([event_type, ecommerce_data.transaction_id, ecommerce_data.total_transaction_amount]);
 	return;
 }
 
 // ** Facebook ** //
-function triggerFacebookEcommerceEvents(ecommerce_data, options = {}) {
+function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof fbq === "undefined") {
 		throw new MasterworksTelemetryError("fbq is undefined");
 	}
@@ -320,10 +320,10 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}) {
 	if (!options.sustainer_only) {
 		if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
 			for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
-				fbq("trackSingle", options.facebook_pixel_ids[i].toString(), "Purchase", { value: ecommerce_data.total_transaction_amount, currency: "USD" });
+				fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
 			}
 		} else {
-			fbq("track", "Purchase", { value: ecommerce_data.total_transaction_amount, currency: "USD" });
+			fbq("track", event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
 		}
 	}
 
@@ -335,7 +335,7 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}) {
 }
 
 // ** Adform ** //
-function triggerAdformEcommerceEvent(ecommerce_data, options = {}) {
+function triggerAdformEcommerceEvent(ecommerce_data, options = {}, event_type = "Donation") {
 	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
 		throw new MasterworksTelemetryError("_adftrack is undefined");
 	}
@@ -344,7 +344,7 @@ function triggerAdformEcommerceEvent(ecommerce_data, options = {}) {
 	window._adftrack.push({
 		pm: mw_telemetry_settings.adform_pixel_id,
 		divider: encodeURIComponent("|"),
-		pagename: encodeURIComponent("MW-Donation"),
+		pagename: encodeURIComponent("MW-" + event_type),
 		order: {
 			orderid: ecommerce_data.transaction_id,
 			sales: ecommerce_data.total_transaction_amount,
@@ -369,15 +369,15 @@ function triggerAdformEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** Zemanta ** //
-function triggerZemantaEcommerceEvent(ecommerce_data, options = {}) {
+function triggerZemantaEcommerceEvent(ecommerce_data, options = {}, event_type = "PURCHASE") {
 	if (typeof zemApi === "undefined") {
 		throw new MasterworksTelemetryError("zemApi is undefined");
 	}
-	zemApi("track", "PURCHASE", { value: ecommerce_data.total_transaction_amount, currency: "USD" });
+	zemApi("track", event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
 }
 
 // ** Google Ads ** //
-function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}) {
+function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
 	if (typeof gtag === "undefined") {
 		throw new MasterworksTelemetryError("gtag is undefined");
 	}
@@ -387,7 +387,7 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}) {
 	}
 
 	options.google_ads_send_to_ids.forEach((google_ads_send_to_id) => {
-		gtag("event", "conversion", {
+		gtag("event", event_type, {
 			send_to: google_ads_send_to_id,
 			value: ecommerce_data.total_transaction_amount,
 			currency: "USD",
@@ -397,12 +397,12 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** TikTok ** //
-function triggerTikTokEcommerceEvent(ecommerce_data, options = {}) {
+function triggerTikTokEcommerceEvent(ecommerce_data, options = {}, event_type = "CompletePayment") {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined");
 	}
 
-	ttq.track("CompletePayment", {
+	ttq.track(event_type, {
 		content_name: "donation",
 		value: ecommerce_data.total_transaction_amount,
 		currency: "USD",
@@ -410,21 +410,21 @@ function triggerTikTokEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** Taboola ** //
-function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}) {
+function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
 		throw new MasterworksTelemetryError("taboola_pixel_id is undefined");
 	}
 
 	_tfa.push({
 		notify: "event",
-		name: "Purchase",
+		name: event_type,
 		id: mw_telemetry_settings.taboola_pixel_id,
 		revenue: ecommerce_data.total_transaction_amount,
 	});
 }
 
 // ** MNTN ** //
-function triggerMNTNEcommerceEvent(ecommerce_data, options = {}) {
+function triggerMNTNEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof mw_telemetry_settings.mntn_pixel_id === "undefined") {
 		throw new MasterworksTelemetryError("mntn_pixel_id is undefined");
 	}
@@ -507,12 +507,12 @@ function triggerMNTNEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 //  ** Pinterest ** //
-function triggerPinterestEcommerceEvent(ecommerce_data, options = {}) {
+function triggerPinterestEcommerceEvent(ecommerce_data, options = {}, event_type = "checkout") {
 	if (typeof pintrk === "undefined") {
 		throw new MasterworksTelemetryError("pintrk is undefined");
 	}
 
-	pintrk("track", "checkout", {
+	pintrk("track", event_type, {
 		value: ecommerce_data.total_transaction_amount,
 		currency: "USD",
 		line_items: ecommerce_data.items.map((item) => ({
@@ -523,7 +523,7 @@ function triggerPinterestEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** Illumin ** //
-function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
+function triggerIlluminEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	if (typeof aap === "undefined") {
 		throw new MasterworksTelemetryError("aap is undefined");
 	}
@@ -539,7 +539,7 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
 	aap({
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: options.illumin_pg,
-		prodid: "donation",
+		prodid: event_type,
 		ordid: ecommerce_data.transaction_id,
 		crev: ecommerce_data.total_transaction_amount,
 		delay: 500,
@@ -547,7 +547,7 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** StackAdapt ** //
-function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
+function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_type = "conv") {
 	if (typeof saq === "undefined") {
 		throw new MasterworksTelemetryError("saq is undefined");
 	}
@@ -556,7 +556,7 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
 		throw new MasterworksTelemetryError("Invalid options.conversion_id: " + options.conversion_id);
 	}
 
-	saq("conv", options.conversion_id, {
+	saq(event_type, options.conversion_id, {
 		revenue: ecommerce_data.total_transaction_amount,
 		"order id": ecommerce_data.transaction_id,
 		"transaction type": ecommerce_data.items[0].category,
@@ -564,9 +564,9 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** BING ** //
-function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
+function triggerBingEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	window.uetq = window.uetq || [];
-	window.uetq.push("event", "donation", {
+	window.uetq.push("event", event_type, {
 		event_category: "donation submit",
 		event_label: "donation : submit",
 		event_value: ecommerce_data.total_transaction_amount,
@@ -576,7 +576,7 @@ function triggerBingEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** TradeDesk ** //
-function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
+function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
 		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
 	}
@@ -595,7 +595,8 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 			"src",
 			`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_tracking_tag_ids[i]}&fmt=3&orderid=` +
 				ecommerce_data.transaction_id +
-				"&td1=donation" +
+				"&td1=" +
+				event_type +
 				"&v=" +
 				ecommerce_data.total_transaction_amount +
 				"&vf=" +
@@ -631,7 +632,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}) {
 }
 
 // ** LinkedIn ** //
-function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}) {
+function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
 	if (typeof window.lintrk === "undefined") {
 		throw new MasterworksTelemetryError("window.lintrk is undefined");
 	}
