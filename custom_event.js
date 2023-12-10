@@ -115,6 +115,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "pinterest":
 			firePinterestCustomEvent(platform.event_type);
 			break;
+		case "tradedesk":
+			fireTradedeskCustomEvent(platform.event_type, configuration.event_name, platform.options);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -260,6 +263,29 @@ function fireRedditCustomEvent(event_type) {
 	}
 
 	rdt("track", event_type);
+}
+
+function fireTradedeskCustomEvent(event_type, event_name, options = {}) {
+	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined");
+	}
+
+	if (options.tradedesk_tracking_tag_ids === undefined || !Array.isArray(options.tradedesk_tracking_tag_ids) || options.tradedesk_tracking_tag_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.tradedesk_tracking_tag_ids: " + options.tradedesk_tracking_tag_ids);
+	}
+
+	for (let i = 0; i < options.tradedesk_tracking_tag_ids.length; i++) {
+		var img = document.createElement("img");
+		img.setAttribute("height", "1");
+		img.setAttribute("width", "1");
+		img.setAttribute("style", "border-style:none;");
+		img.setAttribute("alt", "");
+		img.setAttribute(
+			"src",
+			`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_tracking_tag_ids[i]}&fmt=3` + "&td1=" + event_type + "&td2=" + event_name
+		);
+		document.body.appendChild(img);
+	}
 }
 
 function firePinterestCustomEvent(event_type) {
