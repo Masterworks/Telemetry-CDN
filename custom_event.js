@@ -86,7 +86,7 @@ function handlePlatformEvent(platform, configuration) {
 			firePiwikCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
 		case "facebook":
-			fireFacebookCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			fireFacebookCustomEvent(platform.event_type, configuration.event_name, platform.options, configuration.metadata);
 			break;
 		case "adform":
 			fireAdformCustomEvent(platform.event_type, configuration.event_name);
@@ -148,9 +148,14 @@ function firePiwikCustomEvent(event_type, event_name, options = {}) {
 	}
 }
 
-function fireFacebookCustomEvent(event_type, event_name, metadata = {}) {
+function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata = {}) {
 	if (typeof fbq === "undefined") {
 		throw new MasterworksTelemetryError("fbq is undefined");
+	}
+
+	if (options.facebook_track_custom) {
+		fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
+		return;
 	}
 
 	fbq("track", event_type, { content_name: event_name, ...metadata });
