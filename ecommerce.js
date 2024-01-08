@@ -1,159 +1,15 @@
 /* ----------------------- Trigger Condition Functions ---------------------- */
 
-// To add a new trigger condition, add a new function to mw_ecommerce_trigger_types and add a callback for that trigger type to use (ex: element_exists function)
-const mw_ecommerce_trigger_types = {
-	element_exists: (trigger, callback) => {
-		validateTriggerFields(trigger, ["selector"]);
-		element_exists(trigger.selector, callback);
-	},
-	element_contains_text: (trigger, callback) => {
-		validateTriggerFields(trigger, ["selector", "text"]);
-		element_contains_text(trigger.selector, trigger.text, callback);
-	},
-	dataLayer_event: (trigger, callback) => {
-		validateTriggerFields(trigger, ["event_name"]);
-		detect_dataLayer_event(trigger.event_name, callback);
-	},
-	parameter_equals: (trigger, callback) => {
-		validateTriggerFields(trigger, ["parameter_key", "parameter_value"]);
-		parameter_equals(trigger.parameter_key, trigger.parameter_value, callback);
-	},
-	url_contains_all: (trigger, callback) => {
-		validateTriggerFields(trigger, ["strings"]);
-		url_contains_all(trigger.strings, callback);
-	},
-	url_exact_match: (trigger, callback) => {
-		validateTriggerFields(trigger, ["url"]);
-		url_exact_match(trigger.url, callback);
-	},
-	element_mousedown: (trigger, callback) => {
-		validateTriggerFields(trigger, ["selector"]);
-		element_mousedown(trigger.selector, callback);
-	},
-	page_view: (trigger, callback) => {
-		callback();
-	},
-};
-
-function validateTriggerFields(trigger, fields) {
-	fields.forEach((field) => {
-		if (!trigger[field]) {
-			throw new MasterworksTelemetryError("Missing ecommerce_configuration.trigger." + field + ": " + trigger[field]);
-		}
-	});
-}
-
-function set_mw_ecommerce_trigger(trigger, callback) {
-	if (!trigger.type) {
-		throw new MasterworksTelemetryError("Missing ecommerce_configuration.trigger.type: " + trigger.type);
-	}
-
-	if (!mw_ecommerce_trigger_types[trigger.type]) {
-		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.type: " + trigger.type);
-	}
-
-	if (trigger.timeout && typeof trigger.timeout !== "number") {
-		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.timeout: " + trigger.timeout);
-	}
-
-	if (trigger.timeout) {
-		setTimeout(() => {
-			mw_ecommerce_trigger_types[trigger.type](trigger, callback);
-		}, trigger.timeout);
-	} else {
-		mw_ecommerce_trigger_types[trigger.type](trigger, callback);
-	}
-}
-
-function element_exists(selector, callback) {
-	const elementExistsInterval = setInterval(function () {
-		if (document.querySelector(selector)) {
-			clearInterval(elementExistsInterval);
-			callback();
-		}
-	}, 100);
-}
-
-function element_contains_text(selector, text, callback) {
-	const elementContainsTextInterval = setInterval(function () {
-		const elements = document.querySelectorAll(selector);
-		for (let i = 0; i < elements.length; i++) {
-			if (elements[i].textContent.includes(text)) {
-				clearInterval(elementContainsTextInterval);
-				callback();
-				break;
-			}
-		}
-	}, 100);
-}
-
-function detect_dataLayer_event(event_name, callback) {
-	const originalPush = dataLayer.push.bind(dataLayer);
-	dataLayer.push = function (obj) {
-		originalPush(obj);
-		window.dispatchEvent(new CustomEvent("mw_dataLayer_detection", { detail: obj }));
-	};
-
-	window.addEventListener("mw_dataLayer_detection", function (e) {
-		if (e.detail.event === event_name) {
-			callback();
-		}
-	});
-}
-
-function parameter_equals(parameter_key, parameter_value, callback) {
-	urlsParams = new URLSearchParams(window.location.search);
-	if (urlsParams.get(parameter_key) === parameter_value) {
-		callback();
-	}
-}
-
-function url_contains_all(strings, callback) {
-	if (!Array.isArray(strings)) {
-		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.strings: " + strings);
-	}
-
-	if (!strings.every((string) => matches_current_url(string))) {
-		return;
-	}
-
-	callback();
-}
-
-function url_exact_match(url, callback) {
-	if (window.location.href === url) {
-		callback();
-	}
-}
-
-function element_mousedown(selector, callback) {
-	document.addEventListener("mousedown", function (event) {
-		if (event.target.matches(selector)) {
-			callback();
-		}
-	});
-}
-
 /* -------------------- Set Triggers for Ecommerce Events ------------------- */
 mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
-	if (configuration.urls) {
-		if (!Array.isArray(configuration.urls)) {
-			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.urls: " + configuration.urls);
-		}
-
-		if (!configuration.urls.some((url) => matches_current_url(url))) {
-			return;
-		}
-	}
-
 	if (!Array.isArray(configuration.triggers)) {
 		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers: " + configuration.triggers);
 	}
 
 	configuration.triggers.forEach((trigger) => {
 		try {
-			set_mw_ecommerce_trigger(trigger, () => {
-				triggerEcommerceEvent(configuration);
+			set_mw_trigger(trigger, () => {
+				triggerMWEcommerceEvent(configuration);
 			});
 		} catch (error) {
 			console.error(error);
@@ -161,13 +17,9 @@ mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
 	});
 });
 
-function matches_current_url(url) {
-	return window.location.href.includes(url);
-}
-
 /* ------------------------ Ecommerce Event Functions ----------------------- */
 
-function triggerEcommerceEvent(configuration) {
+function triggerMWEcommerceEvent(configuration) {
 	try {
 		const ecommerce_data = getMWEcommerceData(configuration.configuration_name);
 		if (ecommerce_data === null) {

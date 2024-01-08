@@ -8,25 +8,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers: " + configuration.triggers);
 		}
 
-		configuration.triggers.forEach((trigger) => {
-			if (!trigger.selector || typeof trigger.selector !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.selector: " + trigger.selector);
-			}
-
-			if (!trigger.trigger_event || typeof trigger.trigger_event !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.trigger_event: " + trigger.trigger_event);
-			}
-
-			if (trigger.urls && (!Array.isArray(trigger.urls) || trigger.urls.length === 0)) {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.urls: " + trigger.urls);
-			}
-
-			if (trigger.timeout) {
-				if (typeof trigger.timeout !== "number") {
-					throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers.timeout: " + trigger.timeout);
-				}
-			}
-		});
+		configuration.triggers.forEach((trigger) => {});
 
 		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms: " + configuration.platforms);
@@ -47,33 +29,20 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 		});
 
 		configuration.triggers.forEach((trigger) => {
-			let matchesCurrentURL = trigger.urls ? trigger.urls.some((url) => window.location.href.includes(url)) : true;
-
-			if (!matchesCurrentURL) return;
-
-			const handleEvent = () => {
-				writeEventToDataLayer(configuration.event_name, configuration.metadata);
-				return configuration.platforms.forEach((platform) => handlePlatformEvent(platform, configuration));
-			};
-
-			if (["window", "document"].includes(trigger.selector) && trigger.trigger_event === "load") {
-				handleEvent();
-				return;
+			try {
+				set_mw_trigger(trigger, () => {
+					triggerMWCustomEvent(configuration);
+				});
+			} catch (error) {
+				console.error(error);
 			}
-
-			if (trigger.timeout) {
-				setTimeout(() => {
-					document.querySelectorAll(trigger.selector).forEach((element) => {
-						element.addEventListener(trigger.trigger_event, handleEvent);
-					});
-				}, trigger.timeout);
-				return;
-			}
-
-			document.querySelectorAll(trigger.selector).forEach((element) => {
-				element.addEventListener(trigger.trigger_event, handleEvent);
-			});
 		});
+	});
+}
+
+function triggerMWCustomEvent(configuration) {
+	configuration.platforms.forEach((platform) => {
+		handlePlatformEvent(platform, configuration);
 	});
 }
 
