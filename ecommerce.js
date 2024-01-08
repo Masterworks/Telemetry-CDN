@@ -8,9 +8,14 @@ mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
 
 	configuration.triggers.forEach((trigger) => {
 		try {
-			set_mw_trigger(trigger, () => {
-				triggerMWEcommerceEvent(configuration);
-			});
+			const initializeInterval = setInterval(() => {
+				if (typeof set_mw_trigger !== "undefined") {
+					set_mw_trigger(trigger, () => {
+						triggerMWEcommerceEvent(configuration);
+					});
+					clearInterval(initializeInterval);
+				}
+			}, 100);
 		} catch (error) {
 			console.error(error);
 		}

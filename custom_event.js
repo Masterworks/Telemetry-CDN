@@ -30,9 +30,14 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 
 		configuration.triggers.forEach((trigger) => {
 			try {
-				set_mw_trigger(trigger, () => {
-					triggerMWCustomEvent(configuration);
-				});
+				const initializeInterval = setInterval(() => {
+					if (typeof set_mw_trigger !== "undefined") {
+						set_mw_trigger(trigger, () => {
+							triggerMWCustomEvent(configuration);
+						});
+						clearInterval(initializeInterval);
+					}
+				}, 100);
 			} catch (error) {
 				console.error(error);
 			}
