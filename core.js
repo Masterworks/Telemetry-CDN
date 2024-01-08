@@ -116,6 +116,10 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["selector"]);
 		mw_trigger_element_mousedown(trigger.selector, callback);
 	},
+	element_trigger_event: (trigger, callback) => {
+		validateTriggerFields(trigger, ["selector", "trigger_event"]);
+		mw_trigger_element_trigger_event(trigger.selector, trigger.trigger_event, callback);
+	},
 	page_view: (trigger, callback) => {
 		callback();
 	},
@@ -232,6 +236,12 @@ function mw_trigger_element_mousedown(selector, callback) {
 		if (event.target.matches(selector)) {
 			callback();
 		}
+	});
+}
+
+function mw_trigger_element_trigger_event(selector, trigger_event, callback) {
+	document.querySelectorAll(selector).forEach((element) => {
+		element.addEventListener(trigger_event, callback);
 	});
 }
 
