@@ -207,10 +207,13 @@ function mw_trigger_detect_dataLayer_event(event_name, callback) {
 }
 
 function mw_trigger_parameter_equals(parameter_key, parameter_value, callback) {
-	urlsParams = new URLSearchParams(window.location.search);
-	if (urlsParams.get(parameter_key) === parameter_value) {
-		callback();
-	}
+	const urlParameterEqualsInterval = setInterval(() => {
+		const urlsParams = new URLSearchParams(window.location.search);
+		if (urlsParams.get(parameter_key) === parameter_value) {
+			clearInterval(urlParameterEqualsInterval);
+			callback();
+		}
+	}, 500);
 }
 
 function mw_trigger_url_contains_all(strings, callback) {
@@ -218,11 +221,12 @@ function mw_trigger_url_contains_all(strings, callback) {
 		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.strings: " + strings);
 	}
 
-	if (!strings.every((string) => matches_current_url(string))) {
-		return;
-	}
-
-	callback();
+	const urlContainsAllInterval = setInterval(() => {
+		if (strings.every((string) => matches_current_url(string))) {
+			clearInterval(urlContainsAllInterval);
+			callback();
+		}
+	}, 500);
 }
 
 function mw_trigger_url_exact_match(url, callback) {
