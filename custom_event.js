@@ -92,6 +92,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "tradedesk":
 			fireTradedeskCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
+		case "linkedin":
+			fireLinkedInCustomEvent(platform.options);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
@@ -273,6 +276,18 @@ function firePinterestCustomEvent(event_type) {
 	}
 
 	pintrk("track", event_type);
+}
+
+function fireLinkedInCustomEvent(options = {}) {
+	if (typeof window.lintrk === "undefined") {
+		throw new MasterworksTelemetryError("window.lintrk is undefined");
+	}
+
+	if (typeof options.linkedin_conversion_id === "undefined") {
+		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined");
+	}
+
+	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
