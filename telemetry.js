@@ -324,20 +324,27 @@ function SetMWCustomDimensions() {
 }
 
 function InitiateMWCustomDimensions() {
+	let mwCustomDimensionsIntervalCleared = false;
 	let mwCustomDimensionsInterval = setInterval(function () {
 		if (typeof rudderanalytics !== "undefined") {
 			const rudderstackAnonymousID = rudderanalytics.getAnonymousId();
 			if (typeof rudderstackAnonymousID !== "undefined") {
-				SetMWCustomDimensions();
-				clearInterval(mwCustomDimensionsInterval);
+				if (!mwCustomDimensionsIntervalCleared) {
+					SetMWCustomDimensions();
+					clearInterval(mwCustomDimensionsInterval);
+					mwCustomDimensionsIntervalCleared = true;
+				}
 			}
 		}
 	}, MW_CUSTOM_DIMENSIONS_INTERVAL_DURATION);
 
 	// If the interval is not cleared after the limit, clear it and set the custom dimensions
 	setTimeout(function () {
-		SetMWCustomDimensions();
-		clearInterval(mwCustomDimensionsInterval);
+		if (!mwCustomDimensionsIntervalCleared) {
+			SetMWCustomDimensions();
+			clearInterval(mwCustomDimensionsInterval);
+			mwCustomDimensionsIntervalCleared = true;
+		}
 	}, MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT);
 }
 
