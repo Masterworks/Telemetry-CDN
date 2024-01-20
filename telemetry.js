@@ -259,6 +259,102 @@ function matches_current_url(url) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                              Custom Dimensions                             */
+/* -------------------------------------------------------------------------- */
+const MW_CUSTOM_DIMENSIONS_INTERVAL_DURATION = 50;
+const MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT = 5000;
+
+function SetMWCustomDimensions() {
+	var mwsc = getUrlParameter("mwsc");
+	var mwm_id = getUrlParameter("mwm_id");
+	var csc = getUrlParameter("refcd");
+	var seid = getUrlParameter("seid");
+	var rudd_id = "";
+	if (typeof rudderanalytics != "undefined") {
+		rudd_id = rudderanalytics.getAnonymousId();
+	}
+
+	if (mw_telemetry_settings.matomo_conflict) {
+		window._ppas = window._ppas || [];
+	} else {
+		window._paq = window._paq || [];
+	}
+
+	if (mwsc) {
+		if (mw_telemetry_settings.matomo_conflict) {
+			_ppas.push(["setCustomDimension", 1, mwsc]);
+		} else {
+			_paq.push(["setCustomDimension", 1, mwsc]);
+		}
+	}
+	if (mwm_id) {
+		if (mw_telemetry_settings.matomo_conflict) {
+			_ppas.push(["setCustomDimension", 2, mwm_id]);
+		} else {
+			_paq.push(["setCustomDimension", 2, mwm_id]);
+		}
+	}
+	if (rudd_id) {
+		if (mw_telemetry_settings.matomo_conflict) {
+			_ppas.push(["setCustomDimension", 3, rudd_id]);
+		} else {
+			_paq.push(["setCustomDimension", 3, rudd_id]);
+		}
+	}
+	if (csc) {
+		if (mw_telemetry_settings.matomo_conflict) {
+			_ppas.push(["setCustomDimension", 5, csc]);
+		} else {
+			_paq.push(["setCustomDimension", 5, csc]);
+		}
+	}
+	if (seid) {
+		if (mw_telemetry_settings.matomo_conflict) {
+			_ppas.push(["setCustomDimension", 6, seid]);
+		} else {
+			_paq.push(["setCustomDimension", 6, seid]);
+		}
+	}
+
+	if (mw_telemetry_settings.matomo_conflict) {
+		_ppas.push(["ping"]);
+	} else {
+		_paq.push(["ping"]);
+	}
+}
+
+function InitiateMWCustomDimensions() {
+	let mwCustomDimensionsInterval = setInterval(function () {
+		if (typeof rudderanalytics !== "undefined") {
+			const rudderstackAnonymousID = rudderanalytics.getAnonymousId();
+			if (typeof rudderstackAnonymousID !== "undefined") {
+				SetMWCustomDimensions();
+				clearInterval(mwCustomDimensionsInterval);
+			}
+		}
+	}, MW_CUSTOM_DIMENSIONS_INTERVAL_DURATION);
+
+	// If the interval is not cleared after the limit, clear it and set the custom dimensions
+	setTimeout(function () {
+		SetMWCustomDimensions();
+		clearInterval(mwCustomDimensionsInterval);
+	}, MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT);
+}
+
+// Call the function
+InitiateMWCustomDimensions();
+
+/* ---------------------------- Helper Functions ---------------------------- */
+function getUrlParameter(name, url = window.location.href) {
+	name = name.replace(/[\[\]]/g, "\\$&");
+	var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)", "i"),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return "";
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                  Ecommerce                                 */
 /* -------------------------------------------------------------------------- */
 
