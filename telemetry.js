@@ -362,6 +362,52 @@ function getUrlParameter(name, url = window.location.href) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                           Piwik ID to Rudderstack                          */
+/* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                           Piwik ID to Rudderstack                          */
+/* -------------------------------------------------------------------------- */
+const PIWIK_ID_CHECK_INTERVAL_DURATION = 100;
+const PIWIK_ID_CHECK_INTERVAL_LIMIT = 10000;
+
+function initiatePiwikIdToRudderstack() {
+	let piwikIdCheckIntervalCleared = false;
+	let piwikIdCheckInterval = setInterval(() => {
+		var piwikCookieId = getPiwikCookieId();
+		if (typeof rudderanalytics !== "undefined" && piwikCookieId) {
+			rudderanalytics.identify("", { piwik_id: piwikCookieId });
+			clearInterval(piwikIdCheckInterval);
+			piwikIdCheckIntervalCleared = true;
+		}
+	}, PIWIK_ID_CHECK_INTERVAL_DURATION);
+
+	// If the interval is not cleared after the limit, clear it
+	setTimeout(() => {
+		if (!piwikIdCheckIntervalCleared) {
+			clearInterval(piwikIdCheckInterval);
+			piwikIdCheckIntervalCleared = true;
+		}
+	}, PIWIK_ID_CHECK_INTERVAL_LIMIT);
+}
+
+function getPiwikCookieId() {
+	const piwikCookieRegex = /_pk_id\.[a-z0-9-]+\.[a-z0-9]+=([^;]+);?/;
+	const match = document.cookie.match(piwikCookieRegex);
+
+	if (match) {
+		const cookieValue = match[1];
+		const firstPortion = cookieValue.split(".")[0];
+		return firstPortion;
+	} else {
+		return null; // or handle the case when the cookie is not found
+	}
+}
+
+// Call the function
+initiatePiwikIdToRudderstack();
+
+/* -------------------------------------------------------------------------- */
 /*                                  Ecommerce                                 */
 /* -------------------------------------------------------------------------- */
 
