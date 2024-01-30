@@ -262,7 +262,7 @@ function matches_current_url(url) {
 /*                              Custom Dimensions                             */
 /* -------------------------------------------------------------------------- */
 const MW_CUSTOM_DIMENSIONS_INTERVAL_DURATION = 50;
-const MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT = 5000;
+const MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT = 10000;
 
 function SetMWCustomDimensions() {
 	var mwsc = getUrlParameter("mwsc");
