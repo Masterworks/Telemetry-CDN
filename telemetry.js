@@ -61,22 +61,43 @@ class MasterworksTelemetryError extends Error {
 	}
 
 	logToSlack() {
+
+		let errorData = {
+			client_name: mw_telemetry_settings.client_name,
+			client_abbreviation: mw_telemetry_settings.client_abbreviation,
+			message: this.message,
+			data: this.data,
+		};
+
+		let body = {text: `
+			Error: ${errorData.client_name} (${errorData.client_abbreviation})
+			
+			Error Message: ${errorData.message}
+
+			Error Data: ${JSON.stringify(errorData.data)}
+
+			Line Number: ${this.line_number}
+		`}
+
+		let searchParams = new URLSearchParams(Object.entries(body)).toString();
+
 		fetch("https://hooks.slack.com/services/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", {
 			method: "POST",
 			headers: {
-				"Content-Type": "application/json",
+				"Content-Type": "application/x-www-form-urlencoded",
 			},
-			body: JSON.stringify({
-				text: `
-					Error: ${mw_telemetry_settings.client_name} (${mw_telemetry_settings.client_abbreviation})
+			// body: JSON.stringify({
+			// 	text: `
+			// 		Error: ${mw_telemetry_settings.client_name} (${mw_telemetry_settings.client_abbreviation})
 
-					Error Message: ${this.message}
+			// 		Error Message: ${this.message}
 
-					Error Data: ${JSON.stringify(this.data)}
+			// 		Error Data: ${JSON.stringify(this.data)}
 
-					Line Number: ${this.line_number}
-				`,
-			}),
+			// 		Line Number: ${this.line_number}
+			// 	`,
+			// }),
+
 		});
 	}
 }
