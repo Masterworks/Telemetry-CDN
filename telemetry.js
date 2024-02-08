@@ -1020,7 +1020,8 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 				const initializeInterval = setInterval(() => {
 					if (typeof set_mw_trigger !== "undefined") {
 						set_mw_trigger(trigger, () => {
-							triggerMWCustomEvent(configuration);
+							handleErrors(
+							triggerMWCustomEvent(configuration))
 						});
 						clearInterval(initializeInterval);
 					}
