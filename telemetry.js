@@ -1034,7 +1034,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 
 function triggerMWCustomEvent(configuration) {
 	configuration.platforms.forEach((platform) => {
-		handlePlatformEvent(platform, configuration);
+		handleErrors(handlePlatformEvent(platform, configuration));
 	});
 }
 
