@@ -82,7 +82,7 @@ class MasterworksTelemetryError extends Error {
 
 		let encodedBody = new URLSearchParams(Object.entries(body)).toString();
 
-		fetch("https://hooks.slack.com/services/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", {
+		fetch("https://hooks.slack.com/services/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", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded",
