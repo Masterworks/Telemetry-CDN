@@ -1083,7 +1083,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireLinkedInCustomEvent(platform.options);
 			break;
 		default:
-			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
+			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).logToSlack().logToConsole();
 	}
 }
 
