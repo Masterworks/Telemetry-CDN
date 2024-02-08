@@ -93,7 +93,7 @@ function handleErrors(callback) {
 
 function handleError(error) {
 	if (error instanceof MasterworksTelemetryError) {
-		error.logToConsole();
+		error.logToConsole().logToSlack();
 	} else {
 		new MasterworksTelemetryError(
 			error.message,
