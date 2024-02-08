@@ -1327,6 +1327,16 @@ class IdentificationConfiguration {
 		if (fieldValue) {
 			fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
 			rudderanalytics.identify(fieldValue);
+
+			if (mw_telemetry_settings.matomo_conflict) {
+				if (typeof _ppas != "undefined") {
+					_ppas.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + fieldValue, 0, { dimension4: fieldValue }]);
+				}
+			} else {
+				if (typeof _paq != "undefined") {
+					_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + fieldValue, 0, { dimension4: fieldValue }]);
+				}
+			}
 		}
 	}
 }
