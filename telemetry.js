@@ -54,41 +54,11 @@ class MasterworksTelemetryError extends Error {
 				message: this.message,
 				data: this.data,
 				line_number: this.line_number,
+				file_name: this.file_name,
 			});
 		} catch (err) {
 			console.error(err);
 		}
-	}
-
-	logToSlack() {
-		let errorData = {
-			client_name: mw_telemetry_settings.client_name,
-			client_abbreviation: mw_telemetry_settings.client_abbreviation,
-			message: this.message,
-			data: this.data,
-		};
-
-		let body = {
-			text: `
-			Error: ${errorData.client_name} (${errorData.client_abbreviation})
-			
-			Error Message: ${errorData.message}
-
-			Error Data: ${JSON.stringify(errorData.data)}
-
-			Line Number: ${this.line_number}
-		`,
-		};
-
-		let encodedBody = new URLSearchParams(Object.entries(body)).toString();
-
-		fetch("https://hooks.slack.com/services/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", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
-			},
-			body: encodedBody,
-		});
 	}
 }
 
@@ -104,7 +74,7 @@ function handleErrors(callback) {
 
 function handleError(error) {
 	if (error instanceof MasterworksTelemetryError) {
-		error.logToConsole().logToSlack();
+		error.logToConsole();
 	} else {
 		new MasterworksTelemetryError(
 			error.message,
@@ -1031,7 +1001,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 				const initializeInterval = setInterval(() => {
 					if (typeof set_mw_trigger !== "undefined") {
 						set_mw_trigger(trigger, () => {
-							handleErrors(triggerMWCustomEvent(configuration));
+							triggerMWCustomEvent(configuration);
 						});
 						clearInterval(initializeInterval);
 					}
@@ -1045,7 +1015,7 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 
 function triggerMWCustomEvent(configuration) {
 	configuration.platforms.forEach((platform) => {
-		handleErrors(handlePlatformEvent(platform, configuration));
+		handlePlatformEvent(platform, configuration);
 	});
 }
 
@@ -1094,7 +1064,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireLinkedInCustomEvent(platform.options);
 			break;
 		default:
-			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).logToSlack().logToConsole();
+			throw new MasterworksTelemetryError("Invalid platform: " + platform.name);
 	}
 }
 
