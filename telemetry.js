@@ -54,11 +54,30 @@ class MasterworksTelemetryError extends Error {
 				message: this.message,
 				data: this.data,
 				line_number: this.line_number,
-				file_name: this.file_name,
 			});
 		} catch (err) {
 			console.error(err);
 		}
+	}
+
+	logToSlack() {
+		fetch("https://hooks.slack.com/services/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", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				text: `
+					Error: ${mw_telemetry_settings.client_name} (${mw_telemetry_settings.client_abbreviation})
+
+					Error Message: ${this.message}
+
+					Error Data: ${JSON.stringify(this.data)}
+
+					Line Number: ${this.line_number}
+				`,
+			}),
+		});
 	}
 }
 
