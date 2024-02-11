@@ -1284,20 +1284,6 @@ class IdentificationConfiguration {
 			});
 		}
 
-		if (!configuration.selectors || !Array.isArray(configuration.selectors) || configuration.selectors.length < 1) {
-			throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid or missing selectors", {
-				configuration: configuration,
-			});
-		}
-
-		configuration.selectors.forEach((selector) => {
-			if (typeof selector !== "string") {
-				throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid selectors", {
-					configuration: configuration,
-				});
-			}
-		});
-
 		if (configuration.timeout && typeof configuration.timeout !== "number") {
 			throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid timeout", {
 				configuration: configuration,
