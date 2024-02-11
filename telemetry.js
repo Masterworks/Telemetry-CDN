@@ -1296,64 +1296,76 @@ class IdentificationConfiguration {
 			"blur",
 			(event) => {
 				// TODO outdated, need to remove once all telemetry settings are updated
-				for (let i = 0; i < this.configuration.selectors.length; i++) {
-					if (!event.target.matches(this.configuration.selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.selectors) {
+					for (let i = 0; i < this.configuration.selectors.length; i++) {
+						if (!event.target.matches(this.configuration.selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+						return;
+					}
 				}
 
-				for (let i = 0; i < this.configuration.email_selectors.length; i++) {
-					if (!event.target.matches(this.configuration.email_selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.email_selectors && this.configuration.email_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.email_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.email_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+						return;
+					}
 				}
 
-				for (let i = 0; i < this.configuration.phone_selectors.length; i++) {
-					if (!event.target.matches(this.configuration.phone_selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.phone_selectors && this.configuration.phone_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.phone_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.phone_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { phone: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { phone: fieldValue });
+						return;
+					}
 				}
 
-				for (let i = 0; i < this.configuration.city_selectors.length; i++) {
-					if (!event.target.matches(this.configuration.city_selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.city_selectors && this.configuration.city_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.city_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.city_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { city: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { city: fieldValue });
+						return;
+					}
 				}
 
-				for (let i = 0; i < this.configuration.state_selectors.length; i++) {
-					if (!event.target.matches(this.configuration.state_selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.state_selectors && this.configuration.state_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.state_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.state_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { state: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { state: fieldValue });
+						return;
+					}
 				}
 
-				for (let i = 0; i < this.configuration.zip_selectors.length; i++) {
-					if (!event.target.matches(this.configuration.zip_selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				if (this.configuration.zip_selectors && this.configuration.zip_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.zip_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.zip_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { zip: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, { zip: fieldValue });
+						return;
+					}
 				}
 			},
 			true
