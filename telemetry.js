@@ -1309,6 +1309,7 @@ class IdentificationConfiguration {
 		document.body.addEventListener(
 			"blur",
 			(event) => {
+				// TODO outdated, need to remove once all telemetry settings are updated
 				for (let i = 0; i < this.configuration.selectors.length; i++) {
 					if (!event.target.matches(this.configuration.selectors[i])) {
 						continue; // Ignore if not matching selector
@@ -1316,6 +1317,56 @@ class IdentificationConfiguration {
 
 					let fieldValue = event.target.value;
 					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+					return;
+				}
+
+				for (let i = 0; i < this.configuration.email_selectors.length; i++) {
+					if (!event.target.matches(this.configuration.email_selectors[i])) {
+						continue; // Ignore if not matching selector
+					}
+
+					let fieldValue = event.target.value;
+					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+					return;
+				}
+
+				for (let i = 0; i < this.configuration.phone_selectors.length; i++) {
+					if (!event.target.matches(this.configuration.phone_selectors[i])) {
+						continue; // Ignore if not matching selector
+					}
+
+					let fieldValue = event.target.value;
+					this.fireIdentificationEvent(fieldValue, { phone: fieldValue });
+					return;
+				}
+
+				for (let i = 0; i < this.configuration.city_selectors.length; i++) {
+					if (!event.target.matches(this.configuration.city_selectors[i])) {
+						continue; // Ignore if not matching selector
+					}
+
+					let fieldValue = event.target.value;
+					this.fireIdentificationEvent(fieldValue, { city: fieldValue });
+					return;
+				}
+
+				for (let i = 0; i < this.configuration.state_selectors.length; i++) {
+					if (!event.target.matches(this.configuration.state_selectors[i])) {
+						continue; // Ignore if not matching selector
+					}
+
+					let fieldValue = event.target.value;
+					this.fireIdentificationEvent(fieldValue, { state: fieldValue });
+					return;
+				}
+
+				for (let i = 0; i < this.configuration.zip_selectors.length; i++) {
+					if (!event.target.matches(this.configuration.zip_selectors[i])) {
+						continue; // Ignore if not matching selector
+					}
+
+					let fieldValue = event.target.value;
+					this.fireIdentificationEvent(fieldValue, { zip: fieldValue });
 					return;
 				}
 			},
