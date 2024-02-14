@@ -1303,7 +1303,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "email");
 						return;
 					}
 				}
@@ -1315,7 +1315,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { email: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "email");
 						return;
 					}
 				}
@@ -1327,7 +1327,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { phone: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "phone");
 						return;
 					}
 				}
@@ -1339,7 +1339,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { city: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "city");
 						return;
 					}
 				}
@@ -1351,7 +1351,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { state: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "state");
 						return;
 					}
 				}
@@ -1363,7 +1363,7 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
-						this.fireIdentificationEvent(fieldValue, { zip: fieldValue });
+						this.fireIdentificationEvent(fieldValue, "zip");
 						return;
 					}
 				}
@@ -1372,9 +1372,15 @@ class IdentificationConfiguration {
 		);
 	}
 
-	fireIdentificationEvent(fieldValue) {
-		if (fieldValue) {
-			fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
+	fireIdentificationEvent(fieldValue, fieldType = "email") {
+
+		if (!fieldValue) {
+			return;
+		}
+
+		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
+
+		if (fieldType === "email" ) {
 			rudderanalytics.identify(fieldValue);
 
 			if (mw_telemetry_settings.matomo_conflict) {
@@ -1387,6 +1393,11 @@ class IdentificationConfiguration {
 				}
 			}
 		}
+
+		const identifyData = {}
+		identifyData[fieldType] = fieldValue;
+
+		rudderanalytics.identify("", identifyData);
 	}
 }
 
