@@ -1284,20 +1284,6 @@ class IdentificationConfiguration {
 			});
 		}
 
-		if (!configuration.selectors || !Array.isArray(configuration.selectors) || configuration.selectors.length < 1) {
-			throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid or missing selectors", {
-				configuration: configuration,
-			});
-		}
-
-		configuration.selectors.forEach((selector) => {
-			if (typeof selector !== "string") {
-				throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid selectors", {
-					configuration: configuration,
-				});
-			}
-		});
-
 		if (configuration.timeout && typeof configuration.timeout !== "number") {
 			throw new MasterworksTelemetryError("IdentificationConfiguration initialized with invalid timeout", {
 				configuration: configuration,
@@ -1309,23 +1295,92 @@ class IdentificationConfiguration {
 		document.body.addEventListener(
 			"blur",
 			(event) => {
-				for (let i = 0; i < this.configuration.selectors.length; i++) {
-					if (!event.target.matches(this.configuration.selectors[i])) {
-						continue; // Ignore if not matching selector
-					}
+				// TODO outdated, need to remove once all telemetry settings are updated
+				if (this.configuration.selectors) {
+					for (let i = 0; i < this.configuration.selectors.length; i++) {
+						if (!event.target.matches(this.configuration.selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
 
-					let fieldValue = event.target.value;
-					this.fireIdentificationEvent(fieldValue, { email: fieldValue });
-					return;
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "email");
+						return;
+					}
+				}
+
+				if (this.configuration.email_selectors && this.configuration.email_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.email_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.email_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "email");
+						return;
+					}
+				}
+
+				if (this.configuration.phone_selectors && this.configuration.phone_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.phone_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.phone_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "phone");
+						return;
+					}
+				}
+
+				if (this.configuration.city_selectors && this.configuration.city_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.city_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.city_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "city");
+						return;
+					}
+				}
+
+				if (this.configuration.state_selectors && this.configuration.state_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.state_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.state_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "state");
+						return;
+					}
+				}
+
+				if (this.configuration.zip_selectors && this.configuration.zip_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.zip_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.zip_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+						this.fireIdentificationEvent(fieldValue, "zip");
+						return;
+					}
 				}
 			},
 			true
 		);
 	}
 
-	fireIdentificationEvent(fieldValue) {
-		if (fieldValue) {
-			fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
+	fireIdentificationEvent(fieldValue, fieldType = "email") {
+
+		if (!fieldValue) {
+			return;
+		}
+
+		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
+
+		if (fieldType === "email" ) {
 			rudderanalytics.identify(fieldValue);
 
 			if (mw_telemetry_settings.matomo_conflict) {
@@ -1338,6 +1393,11 @@ class IdentificationConfiguration {
 				}
 			}
 		}
+
+		const identifyData = {}
+		identifyData[fieldType] = fieldValue;
+
+		rudderanalytics.identify("", identifyData);
 	}
 }
 
