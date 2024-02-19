@@ -441,20 +441,16 @@ function triggerMWEcommerceEvent(configuration) {
 	try {
 		const ecommerce_data = getMWEcommerceData(configuration.configuration_name);
 		if (ecommerce_data === null) {
-			console.log("No ecommerce data found for configuration: " + configuration.configuration_name);
 			return;
 		}
 		if (typeof ecommerce_data === "undefined" || isNaN(ecommerce_data.total_transaction_amount) || !Array.isArray(ecommerce_data.items) || ecommerce_data.items.length < 1) {
 			throw new MasterworksTelemetryError("Invalid ecommerce_data: " + ecommerce_data);
 		}
 
-		console.log("Firing ecommerce events for configuration: " + configuration.configuration_name);
-
 		if (isTransactionEventADuplicate(ecommerce_data)) {
 			return;
 		}
 
-		console.log("Firing ecommerce events for configuration2: " + configuration.configuration_name);
 		fireEcommerceEvents(configuration, ecommerce_data);
 		writeTransactionEventCookie(ecommerce_data);
 	} catch (error) {
@@ -482,9 +478,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 	}
 
 	// write transaction data to dataLayer
-	console.log("writing transaction data to dataLayer");
 	writeTransactionDataLayerEvent(ecommerce_data);
-	console.log("transaction data written to dataLayer");
 
 	configuration.platforms.forEach((platform) => {
 		try {
@@ -538,7 +532,6 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
 		} catch (error) {
-			console.log("error Here");
 			console.error(error);
 		}
 	});
