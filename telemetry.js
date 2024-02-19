@@ -477,7 +477,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 	}
 
 	// write transaction data to dataLayer
+	console.log("writing transaction data to dataLayer");
 	writeTransactionDataLayerEvent(ecommerce_data);
+	console.log("transaction data written to dataLayer");
 
 	configuration.platforms.forEach((platform) => {
 		try {
@@ -531,6 +533,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
 		} catch (error) {
+			console.log("error Here");
 			console.error(error);
 		}
 	});
