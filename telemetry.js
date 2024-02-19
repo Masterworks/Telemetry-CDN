@@ -441,6 +441,7 @@ function triggerMWEcommerceEvent(configuration) {
 	try {
 		const ecommerce_data = getMWEcommerceData(configuration.configuration_name);
 		if (ecommerce_data === null) {
+			console.log("No ecommerce data found for configuration: " + configuration.configuration_name);
 			return;
 		}
 		if (typeof ecommerce_data === "undefined" || isNaN(ecommerce_data.total_transaction_amount) || !Array.isArray(ecommerce_data.items) || ecommerce_data.items.length < 1) {
