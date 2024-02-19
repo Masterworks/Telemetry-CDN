@@ -1326,10 +1326,11 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
+						let fieldValue = event.target.value;
+
 						// Clean up phone number to only include numeric characters
 						fieldValue = fieldValue.replace(/[^0-9]/g, "");
 
-						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "phone");
 						return;
 					}
@@ -1357,10 +1358,11 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
+						let fieldValue = event.target.value;
+
 						// Clean up state to only include alphanumeric characters and spaces
 						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\s]/g, "");
 
-						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "state");
 						return;
 					}
@@ -1372,10 +1374,11 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
+						let fieldValue = event.target.value;
+
 						// clean up zip code to only include alphanumeric characters and dashes
 						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\-]/g, "");
 
-						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "zip");
 						return;
 					}
