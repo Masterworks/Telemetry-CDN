@@ -448,9 +448,13 @@ function triggerMWEcommerceEvent(configuration) {
 			throw new MasterworksTelemetryError("Invalid ecommerce_data: " + ecommerce_data);
 		}
 
+		console.log("Firing ecommerce events for configuration: " + configuration.configuration_name);
+
 		if (isTransactionEventADuplicate(ecommerce_data)) {
 			return;
 		}
+
+		console.log("Firing ecommerce events for configuration2: " + configuration.configuration_name);
 		fireEcommerceEvents(configuration, ecommerce_data);
 		writeTransactionEventCookie(ecommerce_data);
 	} catch (error) {
