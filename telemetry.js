@@ -1326,6 +1326,9 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
+						// Clean up phone number to only include numeric characters
+						fieldValue = fieldValue.replace(/[^0-9]/g, "");
+
 						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "phone");
 						return;
@@ -1339,6 +1342,10 @@ class IdentificationConfiguration {
 						}
 
 						let fieldValue = event.target.value;
+
+						// Clean up city name to only include alphanumeric characters and spaces
+						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\s]/g, "");
+
 						this.fireIdentificationEvent(fieldValue, "city");
 						return;
 					}
@@ -1349,6 +1356,9 @@ class IdentificationConfiguration {
 						if (!event.target.matches(this.configuration.state_selectors[i])) {
 							continue; // Ignore if not matching selector
 						}
+
+						// Clean up state to only include alphanumeric characters and spaces
+						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\s]/g, "");
 
 						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "state");
@@ -1362,6 +1372,9 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
+						// clean up zip code to only include alphanumeric characters and dashes
+						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\-]/g, "");
+
 						let fieldValue = event.target.value;
 						this.fireIdentificationEvent(fieldValue, "zip");
 						return;
@@ -1373,14 +1386,13 @@ class IdentificationConfiguration {
 	}
 
 	fireIdentificationEvent(fieldValue, fieldType = "email") {
-
 		if (!fieldValue) {
 			return;
 		}
 
 		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
 
-		if (fieldType === "email" ) {
+		if (fieldType === "email") {
 			rudderanalytics.identify(fieldValue);
 
 			if (mw_telemetry_settings.matomo_conflict) {
@@ -1394,7 +1406,7 @@ class IdentificationConfiguration {
 			}
 		}
 
-		const identifyData = {}
+		const identifyData = {};
 		identifyData[fieldType] = fieldValue;
 
 		rudderanalytics.identify("", identifyData);
