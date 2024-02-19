@@ -940,7 +940,13 @@ function writeTransactionEventCookie(ecommerce_data) {
 
 function getCookie(cname) {
 	var name = cname + "=";
-	var decodedCookie = decodeURIComponent(document.cookie);
+	var decodedCookie;
+	try {
+		decodedCookie = decodeURIComponent(document.cookie);
+	} catch (e) {
+		console.error("Error decoding URI component in cookies", e);
+		return ""; // Return empty string if URI malformed
+	}
 	var ca = decodedCookie.split(";");
 	for (var i = 0; i < ca.length; i++) {
 		var c = ca[i];
