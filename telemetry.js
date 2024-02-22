@@ -1354,6 +1354,9 @@ class IdentificationConfiguration {
 						// Clean up city name to only include alphanumeric characters and spaces
 						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\s]/g, "");
 
+						// To lower case
+						fieldValue = fieldValue.toLowerCase();
+
 						this.fireIdentificationEvent(fieldValue, "city");
 						return;
 					}
@@ -1369,6 +1372,9 @@ class IdentificationConfiguration {
 
 						// Clean up state to only include alphanumeric characters and spaces
 						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\s]/g, "");
+
+						// To lower case
+						fieldValue = fieldValue.toLowerCase();
 
 						this.fireIdentificationEvent(fieldValue, "state");
 						return;
