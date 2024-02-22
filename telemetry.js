@@ -1389,8 +1389,8 @@ class IdentificationConfiguration {
 
 						let fieldValue = event.target.value;
 
-						// clean up zip code to only include alphanumeric characters and dashes
-						fieldValue = fieldValue.replace(/[^a-zA-Z0-9\-]/g, "");
+						// clean up zip code to only include digits and dashes
+						fieldValue = fieldValue.replace(/[^0-9\-]/g, "");
 
 						this.fireIdentificationEvent(fieldValue, "zip");
 						return;
@@ -1423,7 +1423,16 @@ class IdentificationConfiguration {
 		}
 
 		const identifyData = {};
-		identifyData[fieldType] = fieldValue;
+		if (fieldType === "zip" || fieldType === "city" || fieldType === "state") {
+			identifyData.address = {};
+			if (fieldType === "zip") {
+				identifyData.address.postalCode = fieldValue;
+			} else {
+				identifyData.address[fieldType] = fieldValue;
+			}
+		} else {
+			identifyData[fieldType] = fieldValue;
+		}
 
 		rudderanalytics.identify("", identifyData);
 	}
