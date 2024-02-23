@@ -1422,22 +1422,22 @@ class IdentificationConfiguration {
 			}
 		}
 
-		const identifyData = {};
+		const currentTraits = rudderanalytics.getUserTraits();
 		if (fieldType === "zip" || fieldType === "city" || fieldType === "state") {
-			if (!identifyData.address) {
-				identifyData.address = {};
+			if (!currentTraits.address) {
+				currentTraits.address = {};
 			}
 
 			if (fieldType === "zip") {
-				identifyData.address.postalCode = fieldValue;
+				currentTraits.address.postalCode = fieldValue;
 			} else {
-				identifyData.address[fieldType] = fieldValue;
+				currentTraits.address[fieldType] = fieldValue;
 			}
 		} else {
-			identifyData[fieldType] = fieldValue;
+			currentTraits[fieldType] = fieldValue;
 		}
 
-		rudderanalytics.identify("", identifyData);
+		rudderanalytics.identify("", currentTraits);
 	}
 }
 
