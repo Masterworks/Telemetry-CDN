@@ -1424,7 +1424,10 @@ class IdentificationConfiguration {
 
 		const identifyData = {};
 		if (fieldType === "zip" || fieldType === "city" || fieldType === "state") {
-			identifyData.address = {};
+			if (!identifyData.address) {
+				identifyData.address = {};
+			}
+
 			if (fieldType === "zip") {
 				identifyData.address.postalCode = fieldValue;
 			} else {
