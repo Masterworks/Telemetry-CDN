@@ -22,7 +22,7 @@ class MasterworksTelemetryError extends Error {
 		}
 	}
 
-	async reportError() {
+	reportError() {
 		try {
 			if (typeof mw_telemetry_settings === "undefined") {
 				throw new Error("mw_telemetry_settings is undefined");
@@ -40,7 +40,7 @@ class MasterworksTelemetryError extends Error {
 				throw new Error("invalid error message. Must be string.");
 			}
 
-			const response = await fetch("https://telmon.masterworks.digital/log/error", {
+			fetch("https://telmon.masterworks.digital/log/error", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -53,10 +53,6 @@ class MasterworksTelemetryError extends Error {
 					line_number: this.line_number,
 				}),
 			});
-
-			if (!response.ok) {
-				throw new Error("Failed to log error to server");
-			}
 		} catch (err) {
 			console.error(err);
 		}
