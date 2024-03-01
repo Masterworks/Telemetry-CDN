@@ -63,31 +63,31 @@ class MasterworksTelemetryError extends Error {
 	}
 }
 
-function handleErrors(callback) {
-	return function (...args) {
-		try {
-			callback.apply(this, args);
-		} catch (error) {
-			handleError(error);
-		}
-	}.bind(this);
-}
+// function handleErrors(callback) {
+// 	return function (...args) {
+// 		try {
+// 			callback.apply(this, args);
+// 		} catch (error) {
+// 			handleError(error);
+// 		}
+// 	}.bind(this);
+// }
 
-function handleError(error) {
-	if (error instanceof MasterworksTelemetryError) {
-		error.reportError();
-	} else {
-		new MasterworksTelemetryError(
-			error.message,
-			{
-				is_javaScript_error: true,
-			},
-			error.stack
-		).reportError();
-	}
+// function handleError(error) {
+// 	if (error instanceof MasterworksTelemetryError) {
+// 		error.reportError();
+// 	} else {
+// 		new MasterworksTelemetryError(
+// 			error.message,
+// 			{
+// 				is_javaScript_error: true,
+// 			},
+// 			error.stack
+// 		).reportError();
+// 	}
 
-	console.error(error);
-}
+// 	console.error(error);
+// }
 
 /* -------------------------------------------------------------------------- */
 /*                                  Triggers                                  */
@@ -433,6 +433,8 @@ if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecom
 				}, 100);
 			} catch (error) {
 				console.error(error);
+			} finally {
+				clearInterval(initializeInterval);
 			}
 		});
 	});
@@ -1018,6 +1020,8 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 				}, 100);
 			} catch (error) {
 				console.error(error);
+			} finally {
+				clearInterval(initializeInterval);
 			}
 		});
 	});
