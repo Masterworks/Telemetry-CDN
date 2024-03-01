@@ -142,7 +142,7 @@ function validateTriggerFields(trigger, fields) {
 
 function set_mw_trigger(trigger, callback) {
 	if (!trigger.type) {
-		throw new MasterworksTelemetryError("Missing trigger.type: " + trigger.type);
+		throw new MasterworksTelemetryError("Missing trigger.type: " + trigger.type).reportError();
 	}
 
 	if (!mw_trigger_types[trigger.type]) {
