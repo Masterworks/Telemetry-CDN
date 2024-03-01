@@ -431,20 +431,19 @@ if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecom
 		}
 
 		configuration.triggers.forEach((trigger) => {
-			try {
-				const initializeInterval = setInterval(() => {
-					if (typeof set_mw_trigger !== "undefined") {
+			const initializeInterval = setInterval(() => {
+				if (typeof set_mw_trigger !== "undefined") {
+					try {
 						set_mw_trigger(trigger, () => {
 							triggerMWEcommerceEvent(configuration);
 						});
+					} catch (error) {
+						console.error(error);
+					} finally {
 						clearInterval(initializeInterval);
 					}
-				}, 100);
-			} catch (error) {
-				console.error(error);
-			} finally {
-				clearInterval(initializeInterval);
-			}
+				}
+			}, 100);
 		});
 	});
 }
