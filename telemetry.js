@@ -23,39 +23,52 @@ class MasterworksTelemetryError extends Error {
 	}
 
 	reportError() {
-		try {
-			if (typeof mw_telemetry_settings === "undefined") {
-				throw new Error("mw_telemetry_settings is undefined");
-			}
+		return new Promise((resolve, reject) => {
+			try {
+				if (typeof mw_telemetry_settings === "undefined") {
+					throw new Error("mw_telemetry_settings is undefined");
+				}
 
-			if (typeof mw_telemetry_settings.client_name === "undefined") {
-				throw new Error("client_name is undefined");
-			}
+				if (typeof mw_telemetry_settings.client_name === "undefined") {
+					throw new Error("client_name is undefined");
+				}
 
-			if (typeof mw_telemetry_settings.client_abbreviation === "undefined") {
-				throw new Error("client_abbreviation is undefined");
-			}
+				if (typeof mw_telemetry_settings.client_abbreviation === "undefined") {
+					throw new Error("client_abbreviation is undefined");
+				}
 
-			if (typeof this.message !== "string") {
-				throw new Error("invalid error message. Must be string.");
-			}
+				if (typeof this.message !== "string") {
+					throw new Error("invalid error message. Must be string.");
+				}
 
-			fetch("https://telmon.masterworks.digital/log/error", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					client_name: mw_telemetry_settings.client_name,
-					client_abbreviation: mw_telemetry_settings.client_abbreviation,
-					message: this.message,
-					data: this.data,
-					line_number: this.line_number,
-				}),
-			});
-		} catch (err) {
-			console.error(err);
-		}
+				fetch("https://telmon.masterworks.digital/log/error", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						client_name: mw_telemetry_settings.client_name,
+						client_abbreviation: mw_telemetry_settings.client_abbreviation,
+						message: this.message,
+						data: this.data,
+						line_number: this.line_number,
+					}),
+				})
+					.then((response) => {
+						if (response.ok) {
+							resolve();
+						} else {
+							reject(new Error("Failed to report error"));
+						}
+					})
+					.catch((error) => {
+						reject(error);
+					});
+			} catch (err) {
+				console.error(err);
+				reject(err);
+			}
+		});
 	}
 }
 
