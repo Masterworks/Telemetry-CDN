@@ -20,27 +20,19 @@ class MasterworksTelemetryError extends Error {
 				this.line_number = undefined;
 			}
 		}
-
-		const fileName = this.stack.split("\n")[1].split("/")[this.stack.split("\n")[1].split("/").length - 1].split(":")[0];
-
-		if (typeof fileName !== "undefined") {
-			this.file_name = fileName;
-		}
 	}
 
-	logToConsole() {
+	async reportError() {
 		try {
 			if (typeof mw_telemetry_settings === "undefined") {
 				throw new Error("mw_telemetry_settings is undefined");
 			}
 
-			const client_name = mw_telemetry_settings.client_name;
-			if (typeof client_name === "undefined") {
+			if (typeof mw_telemetry_settings.client_name === "undefined") {
 				throw new Error("client_name is undefined");
 			}
 
-			const client_abbreviation = mw_telemetry_settings.client_abbreviation;
-			if (typeof client_abbreviation === "undefined") {
+			if (typeof mw_telemetry_settings.client_abbreviation === "undefined") {
 				throw new Error("client_abbreviation is undefined");
 			}
 
@@ -48,14 +40,23 @@ class MasterworksTelemetryError extends Error {
 				throw new Error("invalid error message. Must be string.");
 			}
 
-			console.log({
-				client_name: client_name,
-				client_abbreviation: client_abbreviation,
-				message: this.message,
-				data: this.data,
-				line_number: this.line_number,
-				file_name: this.file_name,
+			const response = await fetch("https://telmon.masterworks.digital/log/error", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					client_name: mw_telemetry_settings.client_name,
+					client_abbreviation: mw_telemetry_settings.client_abbreviation,
+					message: this.message,
+					data: this.data,
+					line_number: this.line_number,
+				}),
 			});
+
+			if (!response.ok) {
+				throw new Error("Failed to log error to server");
+			}
 		} catch (err) {
 			console.error(err);
 		}
@@ -74,7 +75,7 @@ function handleErrors(callback) {
 
 function handleError(error) {
 	if (error instanceof MasterworksTelemetryError) {
-		error.logToConsole();
+		error.reportError();
 	} else {
 		new MasterworksTelemetryError(
 			error.message,
@@ -82,8 +83,10 @@ function handleError(error) {
 				is_javaScript_error: true,
 			},
 			error.stack
-		).logToConsole();
+		).reportError();
 	}
+
+	console.error(error);
 }
 
 /* -------------------------------------------------------------------------- */
