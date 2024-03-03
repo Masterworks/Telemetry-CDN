@@ -72,32 +72,6 @@ class MasterworksTelemetryError extends Error {
 	}
 }
 
-// function handleErrors(callback) {
-// 	return function (...args) {
-// 		try {
-// 			callback.apply(this, args);
-// 		} catch (error) {
-// 			handleError(error);
-// 		}
-// 	}.bind(this);
-// }
-
-// function handleError(error) {
-// 	if (error instanceof MasterworksTelemetryError) {
-// 		error.reportError();
-// 	} else {
-// 		new MasterworksTelemetryError(
-// 			error.message,
-// 			{
-// 				is_javaScript_error: true,
-// 			},
-// 			error.stack
-// 		).reportError();
-// 	}
-
-// 	console.error(error);
-// }
-
 /* -------------------------------------------------------------------------- */
 /*                                  Triggers                                  */
 /* -------------------------------------------------------------------------- */
@@ -372,10 +346,6 @@ function getUrlParameter(name, url = window.location.href) {
 	if (!results[2]) return "";
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
-
-/* -------------------------------------------------------------------------- */
-/*                           Piwik ID to Rudderstack                          */
-/* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
 /*                           Piwik ID to Rudderstack                          */
@@ -1413,6 +1383,34 @@ class IdentificationConfiguration {
 			},
 			true
 		);
+
+		if (this.configuration.custom_configurations && this.configuration.custom_configurations.length > 0) {
+			this.configuration.custom_configurations.forEach((custom_configuration) => {
+				if (!custom_configuration.configuration_name || typeof custom_configuration.configuration_name !== "string") {
+					throw new MasterworksTelemetryError("Invalid identification_configuration.custom_configuration.configuration_name: " + custom_configuration.configuration_name).reportError();
+				}
+
+				if (!Array.isArray(custom_configuration.triggers) || custom_configuration.triggers.length < 1) {
+					throw new MasterworksTelemetryError("Invalid identification_configuration.custom_configuration.triggers: " + custom_configuration.triggers).reportError();
+				}
+
+				custom_configuration.triggers.forEach((trigger) => {
+					const initializeInterval = setInterval(() => {
+						if (typeof set_mw_trigger !== "undefined") {
+							try {
+								set_mw_trigger(trigger, () => {
+									this.fireCustomIdentificationEvent(custom_configuration);
+								});
+							} catch (error) {
+								console.error(error);
+							} finally {
+								clearInterval(initializeInterval);
+							}
+						}
+					}, 100);
+				});
+			});
+		}
 	}
 
 	fireIdentificationEvent(fieldValue, fieldType = "email") {
@@ -1452,6 +1450,27 @@ class IdentificationConfiguration {
 		}
 
 		rudderanalytics.identify("", currentTraits);
+	}
+
+	fireCustomIdentificationEvent(configuration) {
+		try {
+			const traits = rudderanalytics.getUserTraits();
+			const identifyData = getMWIdentificationData(configuration.configuration_name);
+			if (identifyData) {
+				let email = "";
+				for (const key in identifyData) {
+					if (key === "email") {
+						email = identifyData[key];
+					} else {
+						traits[key] = identifyData[key];
+					}
+				}
+
+				rudderanalytics.identify(email, traits);
+			}
+		} catch (error) {
+			console.error(error);
+		}
 	}
 }
 
