@@ -1461,6 +1461,16 @@ class IdentificationConfiguration {
 				for (const key in identifyData) {
 					if (key === "email") {
 						email = identifyData[key];
+
+						if (mw_telemetry_settings.matomo_conflict) {
+							if (typeof _ppas != "undefined") {
+								_ppas.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
+							}
+						} else {
+							if (typeof _paq != "undefined") {
+								_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
+							}
+						}
 					} else {
 						traits[key] = identifyData[key];
 					}
