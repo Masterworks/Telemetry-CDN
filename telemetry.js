@@ -41,18 +41,33 @@ class MasterworksTelemetryError extends Error {
 					throw new Error("invalid error message. Must be string.");
 				}
 
+				const body = {
+					client_name: mw_telemetry_settings.client_name,
+					client_abbreviation: mw_telemetry_settings.client_abbreviation,
+					message: this.message,
+					line_number: this.line_number,
+					location: window.location.href,
+				};
+
+				const piwikCookieId = getPiwikCookieId();
+				if (piwikCookieId) {
+					body.piwik_id = piwikCookieId;
+				}
+
+				if (this.data) {
+					body.data = this.data;
+				}
+
+				if (this.stack) {
+					body.stack = this.stack;
+				}
+
 				fetch("https://telmon.masterworks.digital/log/error", {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify({
-						client_name: mw_telemetry_settings.client_name,
-						client_abbreviation: mw_telemetry_settings.client_abbreviation,
-						message: this.message,
-						data: this.data,
-						line_number: this.line_number,
-					}),
+					body: JSON.stringify(body),
 				})
 					.then((response) => {
 						if (response.ok) {
