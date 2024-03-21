@@ -589,10 +589,20 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 	if (!options.sustainer_only) {
 		if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
 			for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
-				fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
+				fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, {
+					value: ecommerce_data.total_transaction_amount,
+					currency: "USD",
+					content_ids: ecommerce_data.items.map((item) => item.sku),
+					content_name: ecommerce_data.items.map((item) => item.name).join(","),
+				});
 			}
 		} else {
-			fbq("track", event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
+			fbq("track", event_type, {
+				value: ecommerce_data.total_transaction_amount,
+				currency: "USD",
+				content_ids: ecommerce_data.items.map((item) => item.sku),
+				content_name: ecommerce_data.items.map((item) => item.name).join(","),
+			});
 		}
 	}
 
