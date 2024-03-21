@@ -582,6 +582,7 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "
 
 // ** Facebook ** //
 function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type = "Purchase") {
+	console.log(ecommerce_data, options, event_type);
 	if (typeof fbq === "undefined") {
 		throw new MasterworksTelemetryError("fbq is undefined").reportError();
 	}
@@ -597,6 +598,7 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 				});
 			}
 		} else {
+			console.log(event_type);
 			fbq("track", event_type, {
 				value: ecommerce_data.total_transaction_amount,
 				currency: "USD",
