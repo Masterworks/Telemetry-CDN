@@ -6,6 +6,7 @@ class MasterworksTelemetryError extends Error {
 	constructor(message, data, originalStack = undefined) {
 		super(message);
 		this.data = data;
+		console.log(data);
 
 		if (typeof originalStack !== "undefined") {
 			this.stack = originalStack;
