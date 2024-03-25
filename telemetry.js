@@ -145,7 +145,7 @@ function set_mw_trigger(trigger, callback) {
 	}
 
 	if (!mw_trigger_types[trigger.type]) {
-		throw new MasterworksTelemetryError("Invalid trigger.type: " + trigger.type).reportError();
+		throw new MasterworksTelemetryError("Invalid trigger.type: " + trigger.type, trigger).reportError();
 	}
 
 	if (trigger.timeout && typeof trigger.timeout !== "number") {
