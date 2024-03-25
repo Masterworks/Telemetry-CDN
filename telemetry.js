@@ -412,7 +412,7 @@ initiatePiwikIdToRudderstack();
 if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0) {
 	mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
 		if (!Array.isArray(configuration.triggers)) {
-			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers: " + configuration.triggers).reportError();
+			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers: " + configuration.triggers, configuration).reportError();
 		}
 
 		configuration.triggers.forEach((trigger) => {
@@ -1102,7 +1102,7 @@ function firePiwikCustomEvent(event_type, event_name, options = {}) {
 		_ppas.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
 	} else {
 		if (typeof _paq === "undefined") {
-			throw new MasterworksTelemetryError("_paq is undefined").reportError();
+			throw new MasterworksTelemetryError("_paq is undefined", { event_type, event_name }).reportError();
 		}
 
 		_paq.push(["trackEvent", "mw_cv", `mw_cv : ${event_type}`, `mw_cv : ${event_type} : ${event_name}`, 0]);
