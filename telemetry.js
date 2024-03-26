@@ -127,38 +127,38 @@ const mw_trigger_types = {
 		mw_trigger_element_trigger_event(trigger.selector, trigger.trigger_event, callback);
 	},
 	page_view: (trigger, callback) => {
-		callback();
+		window.onload = callback;
 	},
 };
 
 function validateTriggerFields(trigger, fields) {
 	fields.forEach((field) => {
 		if (!trigger[field]) {
-			throw new MasterworksTelemetryError("Missing trigger field '" + field + "' : " + trigger[field]).reportError();
+			throw new MasterworksTelemetryError("Missing trigger field: " + field, { trigger: trigger }).reportError();
 		}
 	});
 }
 
 function set_mw_trigger(trigger, callback) {
 	if (!trigger.type) {
-		throw new MasterworksTelemetryError("Missing trigger.type: " + trigger.type).reportError();
+		throw new MasterworksTelemetryError("Missing trigger.type", { trigger: trigger }).reportError();
 	}
 
 	if (!mw_trigger_types[trigger.type]) {
-		throw new MasterworksTelemetryError("Invalid trigger.type: " + trigger.type, trigger).reportError();
+		throw new MasterworksTelemetryError("Invalid trigger.type: " + trigger.type, { trigger: trigger }).reportError();
 	}
 
 	if (trigger.timeout && typeof trigger.timeout !== "number") {
-		throw new MasterworksTelemetryError("Invalid trigger.timeout: " + trigger.timeout).reportError();
+		throw new MasterworksTelemetryError("Invalid trigger.timeout", { trigger: trigger }).reportError();
 	}
 
 	if (trigger.urls) {
 		if (!Array.isArray(trigger.urls)) {
-			throw new MasterworksTelemetryError("Invalid trigger.urls: " + trigger.urls).reportError();
+			throw new MasterworksTelemetryError("Invalid trigger.urls", { trigger: trigger }).reportError();
 		}
 
 		if (!trigger.urls.every((url) => typeof url === "string")) {
-			throw new MasterworksTelemetryError("Invalid trigger.urls: " + trigger.urls).reportError();
+			throw new MasterworksTelemetryError("Invalid trigger.urls", { trigger: trigger }).reportError();
 		}
 
 		if (!trigger.urls.some((url) => matches_current_url(url))) {
@@ -224,7 +224,9 @@ function mw_trigger_parameter_equals(parameter_key, parameter_value, callback) {
 
 function mw_trigger_url_contains_all(strings, callback) {
 	if (!Array.isArray(strings)) {
-		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.strings: " + strings).reportError();
+		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.trigger.strings", {
+			strings: strings,
+		}).reportError();
 	}
 
 	const urlContainsAllInterval = setInterval(() => {
@@ -413,7 +415,9 @@ initiatePiwikIdToRudderstack();
 if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0) {
 	mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
 		if (!Array.isArray(configuration.triggers)) {
-			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers: " + configuration.triggers, configuration).reportError();
+			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
+				configuration: configuration,
+			}).reportError();
 		}
 
 		configuration.triggers.forEach((trigger) => {
@@ -443,7 +447,9 @@ function triggerMWEcommerceEvent(configuration) {
 			return;
 		}
 		if (typeof ecommerce_data === "undefined" || isNaN(ecommerce_data.total_transaction_amount) || !Array.isArray(ecommerce_data.items) || ecommerce_data.items.length < 1) {
-			throw new MasterworksTelemetryError("Invalid ecommerce_data: " + ecommerce_data).reportError();
+			throw new MasterworksTelemetryError("Invalid ecommerce_data", {
+				ecommerce_data: ecommerce_data,
+			}).reportError();
 		}
 
 		if (isTransactionEventADuplicate(ecommerce_data)) {
@@ -468,7 +474,7 @@ function isTransactionEventADuplicate(ecommerce_data) {
 
 function fireEcommerceEvents(configuration, ecommerce_data) {
 	if (!Array.isArray(configuration.platforms) || configuration.platforms.length < 1) {
-		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platforms: " + configuration.platforms).reportError();
+		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platforms", { configuration: configuration }).reportError();
 	}
 
 	// generate transaction id if one is not provided
@@ -543,7 +549,10 @@ function generateTransactionID() {
 // ** Rudderstack ** //
 function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_type = "Order Completed") {
 	if (typeof rudderanalytics === "undefined") {
-		throw new MasterworksTelemetryError("rudderanalytics is not defined").reportError();
+		throw new MasterworksTelemetryError("rudderanalytics is not defined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
 	}
 
 	rudderanalytics.track(event_type, {
@@ -558,7 +567,11 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_ty
 function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "trackEcommerceOrder") {
 	if (options.matomo_conflict || mw_telemetry_settings.matomo_conflict) {
 		if (typeof _ppas === "undefined") {
-			throw new MasterworksTelemetryError("_ppas is undefined").reportError();
+			throw new MasterworksTelemetryError("_ppas is undefined", {
+				ecommerce_data: ecommerce_data,
+				event_type: event_type,
+				options: options,
+			}).reportError();
 		}
 
 		ecommerce_data.items.forEach((item) => {
@@ -570,7 +583,11 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "
 	}
 
 	if (typeof _paq === "undefined") {
-		throw new MasterworksTelemetryError("_paq is undefined").reportError();
+		throw new MasterworksTelemetryError("_paq is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+			options: options,
+		}).reportError();
 	}
 
 	ecommerce_data.items.forEach((item) => {
@@ -584,7 +601,11 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "
 // ** Facebook ** //
 function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof fbq === "undefined") {
-		throw new MasterworksTelemetryError("fbq is undefined").reportError();
+		throw new MasterworksTelemetryError("fbq is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+			options: options,
+		}).reportError();
 	}
 
 	if (!options.sustainer_only) {
@@ -617,7 +638,10 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 // ** Adform ** //
 function triggerAdformEcommerceEvent(ecommerce_data, options = {}, event_type = "Donation") {
 	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
-		throw new MasterworksTelemetryError("_adftrack is undefined").reportError();
+		throw new MasterworksTelemetryError("_adftrack is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
 	}
 
 	window._adftrack = Array.isArray(window._adftrack) ? window._adftrack : window._adftrack ? [window._adftrack] : [];
@@ -651,7 +675,10 @@ function triggerAdformEcommerceEvent(ecommerce_data, options = {}, event_type = 
 // ** Zemanta ** //
 function triggerZemantaEcommerceEvent(ecommerce_data, options = {}, event_type = "PURCHASE") {
 	if (typeof zemApi === "undefined") {
-		throw new MasterworksTelemetryError("zemApi is undefined").reportError();
+		throw new MasterworksTelemetryError("zemApi is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
 	}
 	zemApi("track", event_type, { value: ecommerce_data.total_transaction_amount, currency: "USD" });
 }
@@ -659,7 +686,11 @@ function triggerZemantaEcommerceEvent(ecommerce_data, options = {}, event_type =
 // ** Google Ads ** //
 function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
 	if (typeof gtag === "undefined") {
-		throw new MasterworksTelemetryError("gtag is undefined").reportError();
+		throw new MasterworksTelemetryError("gtag is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+			options: options,
+		}).reportError();
 	}
 
 	if (!options || !options.google_ads_send_to_ids || options.google_ads_send_to_ids.length < 1) {
@@ -679,7 +710,10 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 // ** TikTok ** //
 function triggerTikTokEcommerceEvent(ecommerce_data, options = {}, event_type = "CompletePayment") {
 	if (typeof ttq === "undefined") {
-		throw new MasterworksTelemetryError("ttq is undefined").reportError();
+		throw new MasterworksTelemetryError("ttq is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
 	}
 
 	ttq.track(event_type, {
@@ -692,7 +726,7 @@ function triggerTikTokEcommerceEvent(ecommerce_data, options = {}, event_type = 
 // ** Taboola ** //
 function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof mw_telemetry_settings.taboola_pixel_id === "undefined") {
-		throw new MasterworksTelemetryError("taboola_pixel_id is undefined").reportError();
+		throw new MasterworksTelemetryError("taboola_pixel_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type }).reportError();
 	}
 
 	_tfa.push({
@@ -706,7 +740,7 @@ function triggerTaboolaEcommerceEvent(ecommerce_data, options = {}, event_type =
 // ** MNTN ** //
 function triggerMNTNEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof mw_telemetry_settings.mntn_pixel_id === "undefined") {
-		throw new MasterworksTelemetryError("mntn_pixel_id is undefined").reportError();
+		throw new MasterworksTelemetryError("mntn_pixel_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type }).reportError();
 	}
 
 	(function () {
@@ -789,7 +823,7 @@ function triggerMNTNEcommerceEvent(ecommerce_data, options = {}, event_type = "P
 //  ** Pinterest ** //
 function triggerPinterestEcommerceEvent(ecommerce_data, options = {}, event_type = "checkout") {
 	if (typeof pintrk === "undefined") {
-		throw new MasterworksTelemetryError("pintrk is undefined").reportError();
+		throw new MasterworksTelemetryError("pintrk is undefined", { ecommerce_data: ecommerce_data, event_type: event_type }).reportError();
 	}
 
 	pintrk("track", event_type, {
@@ -805,15 +839,15 @@ function triggerPinterestEcommerceEvent(ecommerce_data, options = {}, event_type
 // ** Illumin ** //
 function triggerIlluminEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	if (typeof aap === "undefined") {
-		throw new MasterworksTelemetryError("aap is undefined").reportError();
+		throw new MasterworksTelemetryError("aap is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	if (typeof mw_telemetry_settings.illumin_pixel_id === "undefined") {
-		throw new MasterworksTelemetryError("illumin_pixel_id is undefined").reportError();
+		throw new MasterworksTelemetryError("illumin_pixel_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	if (!options.illumin_pg || typeof options.illumin_pg !== "number") {
-		throw new MasterworksTelemetryError("Invalid options.illumin_pg: " + options.illumin_pg).reportError();
+		throw new MasterworksTelemetryError("Invalid options.illumin_pg", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	aap({
@@ -829,11 +863,11 @@ function triggerIlluminEcommerceEvent(ecommerce_data, options = {}, event_type =
 // ** StackAdapt ** //
 function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_type = "conv") {
 	if (typeof saq === "undefined") {
-		throw new MasterworksTelemetryError("saq is undefined").reportError();
+		throw new MasterworksTelemetryError("saq is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	if (!options.conversion_id || typeof options.conversion_id !== "string") {
-		throw new MasterworksTelemetryError("Invalid options.conversion_id: " + options.conversion_id).reportError();
+		throw new MasterworksTelemetryError("Invalid options.conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	saq(event_type, options.conversion_id, {
@@ -858,11 +892,11 @@ function triggerBingEcommerceEvent(ecommerce_data, options = {}, event_type = "d
 // ** TradeDesk ** //
 function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	if (mw_telemetry_settings.tradedesk_advertiser_id === undefined) {
-		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined").reportError();
+		throw new MasterworksTelemetryError("mw_telemetry_settings.tradedesk_advertiser_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	if (options.tradedesk_tracking_tag_ids === undefined || !Array.isArray(options.tradedesk_tracking_tag_ids) || options.tradedesk_tracking_tag_ids.length === 0) {
-		throw new MasterworksTelemetryError("Invalid options.tradedesk_tracking_tag_ids: " + options.tradedesk_tracking_tag_ids).reportError();
+		throw new MasterworksTelemetryError("Invalid options.tradedesk_tracking_tag_ids", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	for (let i = 0; i < options.tradedesk_tracking_tag_ids.length; i++) {
@@ -914,11 +948,11 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 // ** LinkedIn ** //
 function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
 	if (typeof window.lintrk === "undefined") {
-		throw new MasterworksTelemetryError("window.lintrk is undefined").reportError();
+		throw new MasterworksTelemetryError("window.lintrk is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	if (typeof options.linkedin_conversion_id === "undefined") {
-		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined").reportError();
+		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
@@ -985,30 +1019,30 @@ function writeTransactionDataLayerEvent(ecommerce_data) {
 if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0) {
 	mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
 		if (!configuration.event_name || typeof configuration.event_name !== "string") {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.event_name: " + configuration.event_name).reportError();
+			throw new MasterworksTelemetryError("Invalid custom_event_configurations.event_name", { configuration: configuration }).reportError();
 		}
 
 		if (!configuration.triggers || !Array.isArray(configuration.triggers) || configuration.triggers.length === 0) {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers: " + configuration.triggers).reportError();
+			throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers", { configuration: configuration }).reportError();
 		}
 
 		configuration.triggers.forEach((trigger) => {});
 
 		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms: " + configuration.platforms).reportError();
+			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms", { configuration: configuration }).reportError();
 		}
 
 		configuration.platforms.forEach((platform) => {
 			if (!platform.name || typeof platform.name !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.name: " + platform.name).reportError();
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.name", { configuration: configuration, platform_with_error: platform }).reportError();
 			}
 
 			if (!platform.event_type || typeof platform.event_type !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type: " + platform.event_type).reportError();
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type", { configuration: configuration, platform_with_error: platform }).reportError();
 			}
 
 			if (platform.name === "illumin" && !platform.illumin_pg && typeof platform.illumin_pg !== number) {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg: " + platform.illumin_pg).reportError();
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg", { configuration: configuration, platform_with_error: platform }).reportError();
 			}
 		});
 
