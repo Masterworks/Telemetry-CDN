@@ -127,7 +127,7 @@ const mw_trigger_types = {
 		mw_trigger_element_trigger_event(trigger.selector, trigger.trigger_event, callback);
 	},
 	page_view: (trigger, callback) => {
-		window.onload = callback;
+		callback();
 	},
 };
 
