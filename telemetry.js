@@ -1481,7 +1481,8 @@ class IdentificationConfiguration {
 		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
 
 		if (fieldType === "email") {
-			rudderanalytics.identify(fieldValue);
+			currentTraits.email = fieldValue;
+			rudderanalytics.identify(fieldValue, currentTraits);
 
 			if (mw_telemetry_settings.matomo_conflict) {
 				if (typeof _ppas != "undefined") {
@@ -1521,6 +1522,7 @@ class IdentificationConfiguration {
 				for (const key in identifyData) {
 					if (key === "email") {
 						email = identifyData[key];
+						traits.email = email;
 
 						if (mw_telemetry_settings.matomo_conflict) {
 							if (typeof _ppas != "undefined") {
