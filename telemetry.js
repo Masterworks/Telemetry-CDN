@@ -1496,8 +1496,6 @@ class IdentificationConfiguration {
 					_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + fieldValue, 0, { dimension4: fieldValue }]);
 				}
 			}
-
-			return;
 		}
 
 		if (!userID) {
