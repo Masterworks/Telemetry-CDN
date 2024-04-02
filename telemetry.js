@@ -412,7 +412,7 @@ initiatePiwikIdToRudderstack();
 /* -------------------------------------------------------------------------- */
 
 /* -------------------- Set Triggers for Ecommerce Events ------------------- */
-if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0) {
+if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
 	mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
 		if (!Array.isArray(configuration.triggers)) {
 			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
@@ -1016,7 +1016,7 @@ function writeTransactionDataLayerEvent(ecommerce_data) {
 /*                                Custom Events                               */
 /* -------------------------------------------------------------------------- */
 
-if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0) {
+if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
 	mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
 		if (!configuration.event_name || typeof configuration.event_name !== "string") {
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.event_name", { configuration: configuration }).reportError();
