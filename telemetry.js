@@ -1480,8 +1480,12 @@ class IdentificationConfiguration {
 
 		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
 
+		const currentTraits = rudderanalytics.getUserTraits();
+		let userID = rudderanalytics.getUserId();
+
 		if (fieldType === "email") {
-			rudderanalytics.identify(fieldValue);
+			currentTraits.email = fieldValue;
+			userID = fieldValue;
 
 			if (mw_telemetry_settings.matomo_conflict) {
 				if (typeof _ppas != "undefined") {
@@ -1494,7 +1498,10 @@ class IdentificationConfiguration {
 			}
 		}
 
-		const currentTraits = rudderanalytics.getUserTraits();
+		if (!userID) {
+			userID = "";
+		}
+
 		if (fieldType === "zip" || fieldType === "city" || fieldType === "state") {
 			if (!currentTraits.address) {
 				currentTraits.address = {};
@@ -1509,7 +1516,7 @@ class IdentificationConfiguration {
 			currentTraits[fieldType] = fieldValue;
 		}
 
-		rudderanalytics.identify("", currentTraits);
+		rudderanalytics.identify(userID, currentTraits);
 	}
 
 	fireCustomIdentificationEvent(configuration) {
@@ -1521,6 +1528,7 @@ class IdentificationConfiguration {
 				for (const key in identifyData) {
 					if (key === "email") {
 						email = identifyData[key];
+						traits.email = email;
 
 						if (mw_telemetry_settings.matomo_conflict) {
 							if (typeof _ppas != "undefined") {
