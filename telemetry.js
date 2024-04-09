@@ -963,7 +963,7 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 function generateTransactionCookieValue(ecommerce_data) {
 	return ecommerce_data.items
 		.map((item) => {
-			return item.price + item.sku;
+			return item.name + item.price + item.sku + item.category + item.quantity;
 		})
 		.join("");
 }
