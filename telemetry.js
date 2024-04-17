@@ -1521,47 +1521,47 @@ class IdentificationConfiguration {
 		rudderanalytics.identify(userID, currentTraits);
 
 		/* ------------------------------- Google Ads ------------------------------- */
-		if (gtag !== undefined) {
-			const google_ads_enhanced_ecommerce_data = {};
+		if (this.configuration.use_google_ads_enhanced_user_data && typeof gtag !== "undefined") {
+			const use_google_ads_enhanced_user_data = {};
 
 			if (currentTraits.email) {
-				google_ads_enhanced_ecommerce_data.email = hashSHA256(currentTraits.email.trim());
+				use_google_ads_enhanced_user_data.email = hashSHA256(currentTraits.email.trim());
 			}
 
 			if (currentTraits.phone) {
 				let e164PhoneNumber = "+1" + currentTraits.phone;
-				google_ads_enhanced_ecommerce_data.phone = hashSHA256(e164PhoneNumber);
+				use_google_ads_enhanced_user_data.phone = hashSHA256(e164PhoneNumber);
 			}
 
 			if (currentTraits.zip) {
-				google_ads_enhanced_ecommerce_data.zip = currentTraits.zip;
+				use_google_ads_enhanced_user_data.zip = currentTraits.zip;
 			}
 
 			if (currentTraits.address && currentTraits.address.city) {
-				if (!google_ads_enhanced_ecommerce_data.address) {
-					google_ads_enhanced_ecommerce_data.address = {};
+				if (!use_google_ads_enhanced_user_data.address) {
+					use_google_ads_enhanced_user_data.address = {};
 				}
 
-				google_ads_enhanced_ecommerce_data.address.city = currentTraits.address.city;
+				use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
 			}
 
 			if (currentTraits.address && currentTraits.address.state) {
-				if (!google_ads_enhanced_ecommerce_data.address) {
-					google_ads_enhanced_ecommerce_data.address = {};
+				if (!use_google_ads_enhanced_user_data.address) {
+					use_google_ads_enhanced_user_data.address = {};
 				}
 
-				google_ads_enhanced_ecommerce_data.address.region = currentTraits.address.state;
+				use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
 			}
 
 			if (currentTraits.address && currentTraits.address.postalCode) {
-				if (!google_ads_enhanced_ecommerce_data.address) {
-					google_ads_enhanced_ecommerce_data.address = {};
+				if (!use_google_ads_enhanced_user_data.address) {
+					use_google_ads_enhanced_user_data.address = {};
 				}
 
-				google_ads_enhanced_ecommerce_data.address.postal_code = currentTraits.address.postalCode;
+				use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
 			}
 
-			gtag("set", "user_data", google_ads_enhanced_ecommerce_data);
+			gtag("set", "user_data", use_google_ads_enhanced_user_data);
 		}
 	}
 
