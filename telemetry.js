@@ -1474,6 +1474,8 @@ class IdentificationConfiguration {
 	}
 
 	fireIdentificationEvent(fieldValue, fieldType = "email") {
+		/* ------------------------------- Rudderstack ------------------------------ */
+
 		if (!fieldValue) {
 			return;
 		}
@@ -1517,6 +1519,50 @@ class IdentificationConfiguration {
 		}
 
 		rudderanalytics.identify(userID, currentTraits);
+
+		/* ------------------------------- Google Ads ------------------------------- */
+		if (gtag !== undefined) {
+			const google_ads_enhanced_ecommerce_data = {};
+
+			if (currentTraits.email) {
+				google_ads_enhanced_ecommerce_data.email = hashSHA256(currentTraits.email.trim());
+			}
+
+			if (currentTraits.phone) {
+				let e164PhoneNumber = "+1" + currentTraits.phone;
+				google_ads_enhanced_ecommerce_data.phone = hashSHA256(e164PhoneNumber);
+			}
+
+			if (currentTraits.zip) {
+				google_ads_enhanced_ecommerce_data.zip = currentTraits.zip;
+			}
+
+			if (currentTraits.address && currentTraits.address.city) {
+				if (!google_ads_enhanced_ecommerce_data.address) {
+					google_ads_enhanced_ecommerce_data.address = {};
+				}
+
+				google_ads_enhanced_ecommerce_data.address.city = currentTraits.address.city;
+			}
+
+			if (currentTraits.address && currentTraits.address.state) {
+				if (!google_ads_enhanced_ecommerce_data.address) {
+					google_ads_enhanced_ecommerce_data.address = {};
+				}
+
+				google_ads_enhanced_ecommerce_data.address.region = currentTraits.address.state;
+			}
+
+			if (currentTraits.address && currentTraits.address.postalCode) {
+				if (!google_ads_enhanced_ecommerce_data.address) {
+					google_ads_enhanced_ecommerce_data.address = {};
+				}
+
+				google_ads_enhanced_ecommerce_data.address.postal_code = currentTraits.address.postalCode;
+			}
+
+			gtag("set", "user_data", google_ads_enhanced_ecommerce_data);
+		}
 	}
 
 	fireCustomIdentificationEvent(configuration) {
@@ -1641,4 +1687,12 @@ if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
 
 		productSearchConfiguration.fireProductSearchEvent();
 	});
+}
+
+async function hashSHA256(string) {
+	const utf8 = new TextEncoder().encode(string);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", utf8);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const hashHex = hashArray.map((bytes) => bytes.toString(16).padStart(2, "0")).join("");
+	return hashHex;
 }
