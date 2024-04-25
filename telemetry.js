@@ -1525,12 +1525,12 @@ class IdentificationConfiguration {
 			const use_google_ads_enhanced_user_data = {};
 
 			if (currentTraits.email) {
-				use_google_ads_enhanced_user_data.sha256_email_address = await hashSHA256(currentTraits.email.trim());
+				use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
 			}
 
 			if (currentTraits.phone) {
 				let e164PhoneNumber = "+1" + currentTraits.phone;
-				use_google_ads_enhanced_user_data.sha256_phone_number = await hashSHA256(e164PhoneNumber);
+				use_google_ads_enhanced_user_data.phone = e164PhoneNumber;
 			}
 
 			if (currentTraits.zip) {
@@ -1561,7 +1561,7 @@ class IdentificationConfiguration {
 				use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
 			}
 
-			console.log(use_google_ads_enhanced_user_data);
+			console.log("use_google_ads_enhanced_user_data", use_google_ads_enhanced_user_data);
 			gtag("set", "user_data", use_google_ads_enhanced_user_data);
 		}
 	}
