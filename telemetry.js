@@ -1473,7 +1473,7 @@ class IdentificationConfiguration {
 		}
 	}
 
-	fireIdentificationEvent(fieldValue, fieldType = "email") {
+	async fireIdentificationEvent(fieldValue, fieldType = "email") {
 		/* ------------------------------- Rudderstack ------------------------------ */
 
 		if (!fieldValue) {
@@ -1525,12 +1525,12 @@ class IdentificationConfiguration {
 			const use_google_ads_enhanced_user_data = {};
 
 			if (currentTraits.email) {
-				use_google_ads_enhanced_user_data.email = hashSHA256(currentTraits.email.trim());
+				use_google_ads_enhanced_user_data.email = await hashSHA256(currentTraits.email.trim());
 			}
 
 			if (currentTraits.phone) {
 				let e164PhoneNumber = "+1" + currentTraits.phone;
-				use_google_ads_enhanced_user_data.phone = hashSHA256(e164PhoneNumber);
+				use_google_ads_enhanced_user_data.phone = await hashSHA256(e164PhoneNumber);
 			}
 
 			if (currentTraits.zip) {
