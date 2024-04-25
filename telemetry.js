@@ -1473,7 +1473,7 @@ class IdentificationConfiguration {
 		}
 	}
 
-	async fireIdentificationEvent(fieldValue, fieldType = "email") {
+	fireIdentificationEvent(fieldValue, fieldType = "email") {
 		/* ------------------------------- Rudderstack ------------------------------ */
 
 		if (!fieldValue) {
