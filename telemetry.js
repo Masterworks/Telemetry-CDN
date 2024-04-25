@@ -1561,7 +1561,6 @@ class IdentificationConfiguration {
 				use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
 			}
 
-			console.log("use_google_ads_enhanced_user_data", use_google_ads_enhanced_user_data);
 			gtag("set", "user_data", use_google_ads_enhanced_user_data);
 		}
 	}
