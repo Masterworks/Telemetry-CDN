@@ -129,6 +129,10 @@ const mw_trigger_types = {
 	page_view: (trigger, callback) => {
 		callback();
 	},
+	pathname_exact_match: (trigger, callback) => {
+		validateTriggerFields(trigger, ["pathname"]);
+		mw_trigger_pathname_exact_match(trigger.pathname, callback);
+	},
 };
 
 function validateTriggerFields(trigger, fields) {
@@ -255,6 +259,12 @@ function mw_trigger_element_trigger_event(selector, trigger_event, callback) {
 	document.querySelectorAll(selector).forEach((element) => {
 		element.addEventListener(trigger_event, callback);
 	});
+}
+
+function mw_trigger_pathname_exact_match(pathname, callback) {
+	if (window.location.pathname === pathname) {
+		callback();
+	}
 }
 
 /* ---------------------------- Helper Functions ---------------------------- */
