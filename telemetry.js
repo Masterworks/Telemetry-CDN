@@ -1525,7 +1525,7 @@ class IdentificationConfiguration {
 			const use_google_ads_enhanced_user_data = {};
 
 			if (currentTraits.email) {
-				use_google_ads_enhanced_user_data.email_address = currentTraits.email.trim();
+				use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
 			}
 
 			if (currentTraits.phone) {
