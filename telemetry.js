@@ -698,11 +698,17 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 	}
 
 	options.google_ads_send_to_ids.forEach((google_ads_send_to_id) => {
+		let enhanced_user_data;
+		if (options.use_google_ads_enhanced_user_data) {
+			enhanced_user_data = getGAEnhancedUserData();
+		}
+
 		gtag("event", event_type, {
 			send_to: google_ads_send_to_id,
 			value: ecommerce_data.total_transaction_amount,
 			currency: "USD",
 			transaction_id: ecommerce_data.transaction_id,
+			user_data: enhanced_user_data,
 		});
 	});
 }
@@ -1232,8 +1238,14 @@ function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
 	}
 
 	for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
+		let enhanced_user_data;
+		if (options.use_google_ads_enhanced_user_data) {
+			enhanced_user_data = getGAEnhancedUserData();
+		}
+
 		gtag("event", event_type, {
 			send_to: options.google_ads_send_to_ids[i],
+			user_data: enhanced_user_data,
 		});
 	}
 }
@@ -1519,51 +1531,6 @@ class IdentificationConfiguration {
 		}
 
 		rudderanalytics.identify(userID, currentTraits);
-
-		/* ------------------------------- Google Ads ------------------------------- */
-		if (this.configuration.use_google_ads_enhanced_user_data && typeof gtag !== "undefined") {
-			const use_google_ads_enhanced_user_data = {};
-
-			if (currentTraits.email) {
-				use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
-			}
-
-			if (currentTraits.phone) {
-				let e164PhoneNumber = "+1" + currentTraits.phone;
-				use_google_ads_enhanced_user_data.phone_number = e164PhoneNumber;
-			}
-
-			if (currentTraits.zip) {
-				use_google_ads_enhanced_user_data.zip = currentTraits.zip;
-			}
-
-			if (currentTraits.address && currentTraits.address.city) {
-				if (!use_google_ads_enhanced_user_data.address) {
-					use_google_ads_enhanced_user_data.address = {};
-				}
-
-				use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
-			}
-
-			if (currentTraits.address && currentTraits.address.state) {
-				if (!use_google_ads_enhanced_user_data.address) {
-					use_google_ads_enhanced_user_data.address = {};
-				}
-
-				use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
-			}
-
-			if (currentTraits.address && currentTraits.address.postalCode) {
-				if (!use_google_ads_enhanced_user_data.address) {
-					use_google_ads_enhanced_user_data.address = {};
-				}
-
-				use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
-			}
-
-			console.log("use_google_ads_enhanced_user_data", use_google_ads_enhanced_user_data);
-			gtag("set", "user_data", use_google_ads_enhanced_user_data);
-		}
 	}
 
 	fireCustomIdentificationEvent(configuration) {
@@ -1690,10 +1657,47 @@ if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
 	});
 }
 
-async function hashSHA256(string) {
-	const utf8 = new TextEncoder().encode(string);
-	const hashBuffer = await crypto.subtle.digest("SHA-256", utf8);
-	const hashArray = Array.from(new Uint8Array(hashBuffer));
-	const hashHex = hashArray.map((bytes) => bytes.toString(16).padStart(2, "0")).join("");
-	return hashHex;
+/* --------------------------- GA Helper Function --------------------------- */
+function getGAEnhancedUserData() {
+	const currentTraits = rudderanalytics.getUserTraits();
+	const use_google_ads_enhanced_user_data = {};
+
+	if (currentTraits.email) {
+		use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
+	}
+
+	if (currentTraits.phone) {
+		let e164PhoneNumber = "+1" + currentTraits.phone;
+		use_google_ads_enhanced_user_data.phone_number = e164PhoneNumber;
+	}
+
+	if (currentTraits.zip) {
+		use_google_ads_enhanced_user_data.zip = currentTraits.zip;
+	}
+
+	if (currentTraits.address && currentTraits.address.city) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
+	}
+
+	if (currentTraits.address && currentTraits.address.state) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
+	}
+
+	if (currentTraits.address && currentTraits.address.postalCode) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
+	}
+
+	return use_google_ads_enhanced_user_data;
 }
