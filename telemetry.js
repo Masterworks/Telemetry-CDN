@@ -543,6 +543,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "linkedin":
 					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "twitter":
+					triggerTwitterEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform).reportError();
 			}
@@ -974,6 +977,45 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
 }
 
+// ** Twitter ** //
+function triggerTwitterEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	if (typeof twq === "undefined") {
+		throw new MasterworksTelemetryError("twq is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	if (!options.twitter_event_ids || !Array.isArray(options.twitter_event_ids) || options.twitter_event_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	const userData = rudderanalytics.getUserTraits();
+
+	for (let i = 0; i < options.twitter_event_ids.length; i++) {
+		twq("event", options.twitter_event_ids[i], {
+			value: ecommerce_data.total_transaction_amount,
+			currency: "USD",
+			conversion_id: ecommerce_data.transaction_id,
+			email_address: userData.email,
+			phone_number: userData.phone,
+		});
+	}
+
+	if (options.twitter_sustainer_event_ids && options.twitter_sustainer_event_ids.length > 0) {
+		ecommerce_data.items.forEach((item) => {
+			if (item.category === "sustainer") {
+				for (let i = 0; i < options.twitter_sustainer_event_ids.length; i++) {
+					twq("event", options.twitter_sustainer_event_ids[i], {
+						value: item.amount,
+						currency: "USD",
+						conversion_id: ecommerce_data.transaction_id + "-" + item.sku,
+						email_address: userData.email,
+						phone_number: userData.phone,
+					});
+				}
+			}
+		});
+	}
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
@@ -1116,7 +1158,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
 			break;
 		case "twitter":
-			fireTwitterCustomEvent(platform.event_type);
+			fireTwitterCustomEvent(platform.event_type, platform.options);
 			break;
 		case "reddit":
 			fireRedditCustomEvent(platform.event_type);
@@ -1272,12 +1314,23 @@ function fireTaboolaCustomEvent(event_type, event_name) {
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
 }
 
-function fireTwitterCustomEvent(event_type) {
+function fireTwitterCustomEvent(event_type, options = {}) {
 	if (typeof twq === "undefined") {
 		throw new MasterworksTelemetryError("twq is undefined").reportError();
 	}
 
-	twq("track", event_type);
+	if (!options.twitter_event_ids || !Array.isArray(options.twitter_event_ids) || options.twitter_event_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids: " + options.twitter_event_ids).reportError();
+	}
+
+	const userData = rudderanalytics.getUserTraits();
+
+	for (let i = 0; i < options.twitter_event_ids.length; i++) {
+		twq("event", options.twitter_event_ids[i], {
+			email_address: userData.email,
+			phone_number: userData.phone,
+		});
+	}
 }
 
 function fireRedditCustomEvent(event_type) {
