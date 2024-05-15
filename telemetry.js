@@ -914,6 +914,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 		img.setAttribute("height", "1");
 		img.setAttribute("width", "1");
 		img.setAttribute("style", "border-style:none;");
+		img.setAttribute("style", "display:none;");
 		img.setAttribute("alt", "");
 		img.setAttribute(
 			"src",
@@ -937,6 +938,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 					img.setAttribute("height", "1");
 					img.setAttribute("width", "1");
 					img.setAttribute("style", "border-style:none;");
+					img.setAttribute("style", "display:none;");
 					img.setAttribute("alt", "");
 					img.setAttribute(
 						"src",
@@ -1290,6 +1292,7 @@ function fireTradedeskCustomEvent(event_type, event_name, options = {}) {
 		img.setAttribute("height", "1");
 		img.setAttribute("width", "1");
 		img.setAttribute("style", "border-style:none;");
+		img.setAttribute("style", "display:none;");
 		img.setAttribute("alt", "");
 		img.setAttribute(
 			"src",
