@@ -1028,53 +1028,54 @@ function writeTransactionDataLayerEvent(ecommerce_data) {
 /*                                Custom Events                               */
 /* -------------------------------------------------------------------------- */
 
-if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
-	mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
-		if (!configuration.event_name || typeof configuration.event_name !== "string") {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.event_name", { configuration: configuration }).reportError();
-		}
-
-		if (!configuration.triggers || !Array.isArray(configuration.triggers) || configuration.triggers.length === 0) {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers", { configuration: configuration }).reportError();
-		}
-
-		configuration.triggers.forEach((trigger) => {});
-
-		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
-			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms", { configuration: configuration }).reportError();
-		}
-
-		configuration.platforms.forEach((platform) => {
-			if (!platform.name || typeof platform.name !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.name", { configuration: configuration, platform_with_error: platform }).reportError();
+document.addEventListener("DOMContentLoaded", () => {
+	if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.custom_event_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
+		mw_telemetry_settings.custom_event_configurations.forEach((configuration) => {
+			if (!configuration.event_name || typeof configuration.event_name !== "string") {
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.event_name", { configuration: configuration }).reportError();
 			}
 
-			if (!platform.event_type || typeof platform.event_type !== "string") {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type", { configuration: configuration, platform_with_error: platform }).reportError();
+			if (!configuration.triggers || !Array.isArray(configuration.triggers) || configuration.triggers.length === 0) {
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers", { configuration: configuration }).reportError();
 			}
 
-			if (platform.name === "illumin" && !platform.illumin_pg && typeof platform.illumin_pg !== number) {
-				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg", { configuration: configuration, platform_with_error: platform }).reportError();
+			if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
+				throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms", { configuration: configuration }).reportError();
 			}
-		});
 
-		configuration.triggers.forEach((trigger) => {
-			const initializeInterval = setInterval(() => {
-				if (typeof set_mw_trigger !== "undefined") {
-					try {
-						set_mw_trigger(trigger, () => {
-							triggerMWCustomEvent(configuration);
-						});
-					} catch (error) {
-						console.error(error);
-					} finally {
-						clearInterval(initializeInterval);
-					}
+			configuration.platforms.forEach((platform) => {
+				if (!platform.name || typeof platform.name !== "string") {
+					throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.name", { configuration: configuration, platform_with_error: platform }).reportError();
 				}
-			}, 100);
+
+				if (!platform.event_type || typeof platform.event_type !== "string") {
+					throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.event_type", { configuration: configuration, platform_with_error: platform }).reportError();
+				}
+
+				if (platform.name === "illumin" && !platform.illumin_pg && typeof platform.illumin_pg !== "number") {
+					// Fixed typeof check
+					throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms.illumin_pg", { configuration: configuration, platform_with_error: platform }).reportError();
+				}
+			});
+
+			configuration.triggers.forEach((trigger) => {
+				const initializeInterval = setInterval(() => {
+					if (typeof set_mw_trigger !== "undefined") {
+						try {
+							set_mw_trigger(trigger, () => {
+								triggerMWCustomEvent(configuration);
+							});
+						} catch (error) {
+							console.error(error);
+						} finally {
+							clearInterval(initializeInterval);
+						}
+					}
+				}, 100);
+			});
 		});
-	});
-}
+	}
+});
 
 function triggerMWCustomEvent(configuration) {
 	configuration.platforms.forEach((platform) => {
