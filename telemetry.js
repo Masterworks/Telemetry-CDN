@@ -1175,14 +1175,14 @@ function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata 
 	setTimeout(() => {
 		if (typeof fbq === "undefined") {
 			clearInterval(interval);
-			throw new MasterworksTelemetryError("fbq is still undefined after 15 seconds", {
+			throw new MasterworksTelemetryError("fbq is still undefined after 30 seconds", {
 				event_type: event_type,
 				event_name: event_name,
 				options: options,
 				metadata: metadata,
 			}).reportError();
 		}
-	}, 15000);
+	}, 30000);
 }
 
 function fireAdformCustomEvent(event_type, event_name) {
