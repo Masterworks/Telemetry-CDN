@@ -422,31 +422,33 @@ initiatePiwikIdToRudderstack();
 /* -------------------------------------------------------------------------- */
 
 /* -------------------- Set Triggers for Ecommerce Events ------------------- */
-if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
-	mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
-		if (!Array.isArray(configuration.triggers)) {
-			throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
-				configuration: configuration,
-			}).reportError();
-		}
+document.addEventListener("DOMContentLoaded", function () {
+	if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
+		mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
+			if (!Array.isArray(configuration.triggers)) {
+				throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
+					configuration: configuration,
+				}).reportError();
+			}
 
-		configuration.triggers.forEach((trigger) => {
-			const initializeInterval = setInterval(() => {
-				if (typeof set_mw_trigger !== "undefined") {
-					try {
-						set_mw_trigger(trigger, () => {
-							triggerMWEcommerceEvent(configuration);
-						});
-					} catch (error) {
-						console.error(error);
-					} finally {
-						clearInterval(initializeInterval);
+			configuration.triggers.forEach((trigger) => {
+				const initializeInterval = setInterval(() => {
+					if (typeof set_mw_trigger !== "undefined") {
+						try {
+							set_mw_trigger(trigger, () => {
+								triggerMWEcommerceEvent(configuration);
+							});
+						} catch (error) {
+							console.error(error);
+						} finally {
+							clearInterval(initializeInterval);
+						}
 					}
-				}
-			}, 100);
+				}, 100);
+			});
 		});
-	});
-}
+	}
+});
 
 /* ------------------------ Ecommerce Event Functions ----------------------- */
 
@@ -1159,7 +1161,7 @@ function firePiwikCustomEvent(event_type, event_name, options = {}) {
 
 function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata = {}) {
 	if (typeof fbq === "undefined") {
-		throw new MasterworksTelemetryError("fbq is undefined").reportError();
+		throw new MasterworksTelemetryError("fbq is undefined", { event_name: event_name, event_type: event_type, metadata: metadata, options: options }).reportError();
 	}
 
 	if (options.facebook_track_custom) {
@@ -1566,14 +1568,16 @@ class IdentificationConfiguration {
 	}
 }
 
-if (mw_telemetry_settings.identification_configuration) {
-	const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
-	if (indentificationConfiguration.configuration.timeout) {
-		setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
-	} else {
-		indentificationConfiguration.setIdentificationEvents();
+document.addEventListener("DOMContentLoaded", () => {
+	if (mw_telemetry_settings.identification_configuration) {
+		const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
+		if (indentificationConfiguration.configuration.timeout) {
+			setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
+		} else {
+			indentificationConfiguration.setIdentificationEvents();
+		}
 	}
-}
+});
 
 /* -------------------------------------------------------------------------- */
 /*                               Product Search                               */
@@ -1645,14 +1649,16 @@ class ProductSearchConfiguration {
 	}
 }
 
-if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
-	mw_telemetry_settings.product_search_configurations.forEach((configuration) => {
-		const productSearchConfiguration = new ProductSearchConfiguration(configuration);
+document.addEventListener("DOMContentLoaded", () => {
+	if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
+		mw_telemetry_settings.product_search_configurations.forEach((configuration) => {
+			const productSearchConfiguration = new ProductSearchConfiguration(configuration);
 
-		if (!productSearchConfiguration.matchesCurrentURL()) {
-			return;
-		}
+			if (!productSearchConfiguration.matchesCurrentURL()) {
+				return;
+			}
 
-		productSearchConfiguration.fireProductSearchEvent();
-	});
-}
+			productSearchConfiguration.fireProductSearchEvent();
+		});
+	}
+});
