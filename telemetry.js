@@ -1160,16 +1160,29 @@ function firePiwikCustomEvent(event_type, event_name, options = {}) {
 }
 
 function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata = {}) {
-	if (typeof fbq === "undefined") {
-		throw new MasterworksTelemetryError("fbq is undefined", { event_name: event_name, event_type: event_type, metadata: metadata, options: options }).reportError();
-	}
+	const interval = setInterval(() => {
+		if (typeof fbq !== "undefined") {
+			clearInterval(interval);
 
-	if (options.facebook_track_custom) {
-		fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
-		return;
-	}
+			if (options.facebook_track_custom) {
+				fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
+			} else {
+				fbq("track", event_type, { content_name: event_name, ...metadata });
+			}
+		}
+	}, 250);
 
-	fbq("track", event_type, { content_name: event_name, ...metadata });
+	setTimeout(() => {
+		if (typeof fbq === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("fbq is still undefined after 15 seconds", {
+				event_type: event_type,
+				event_name: event_name,
+				options: options,
+				metadata: metadata,
+			}).reportError();
+		}
+	}, 15000);
 }
 
 function fireAdformCustomEvent(event_type, event_name) {
