@@ -133,6 +133,10 @@ const mw_trigger_types = {
 	page_view: (trigger, callback) => {
 		callback();
 	},
+	pathname_exact_match: (trigger, callback) => {
+		validateTriggerFields(trigger, ["pathname"]);
+		mw_trigger_pathname_exact_match(trigger.pathname, callback);
+	},
 };
 
 function validateTriggerFields(trigger, fields) {
@@ -543,6 +547,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "linkedin":
 					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "twitter":
+					triggerTwitterEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform).reportError();
 			}
@@ -708,11 +715,17 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 	}
 
 	options.google_ads_send_to_ids.forEach((google_ads_send_to_id) => {
+		let enhanced_user_data;
+		if (options.use_google_ads_enhanced_user_data) {
+			enhanced_user_data = getGAEnhancedUserData();
+		}
+
 		gtag("event", event_type, {
 			send_to: google_ads_send_to_id,
 			value: ecommerce_data.total_transaction_amount,
 			currency: "USD",
 			transaction_id: ecommerce_data.transaction_id,
+			user_data: enhanced_user_data,
 		});
 	});
 }
@@ -970,6 +983,45 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
 }
 
+// ** Twitter ** //
+function triggerTwitterEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	if (typeof twq === "undefined") {
+		throw new MasterworksTelemetryError("twq is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	if (!options.twitter_event_ids || !Array.isArray(options.twitter_event_ids) || options.twitter_event_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	const userData = rudderanalytics.getUserTraits();
+
+	for (let i = 0; i < options.twitter_event_ids.length; i++) {
+		twq("event", options.twitter_event_ids[i], {
+			value: ecommerce_data.total_transaction_amount,
+			currency: "USD",
+			conversion_id: ecommerce_data.transaction_id,
+			email_address: userData.email,
+			phone_number: userData.phone,
+		});
+	}
+
+	if (options.twitter_sustainer_event_ids && options.twitter_sustainer_event_ids.length > 0) {
+		ecommerce_data.items.forEach((item) => {
+			if (item.category === "sustainer") {
+				for (let i = 0; i < options.twitter_sustainer_event_ids.length; i++) {
+					twq("event", options.twitter_sustainer_event_ids[i], {
+						value: item.amount,
+						currency: "USD",
+						conversion_id: ecommerce_data.transaction_id + "-" + item.sku,
+						email_address: userData.email,
+						phone_number: userData.phone,
+					});
+				}
+			}
+		});
+	}
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
@@ -1112,7 +1164,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireTaboolaCustomEvent(platform.event_type, configuration.event_name);
 			break;
 		case "twitter":
-			fireTwitterCustomEvent(platform.event_type);
+			fireTwitterCustomEvent(platform.event_type, platform.options);
 			break;
 		case "reddit":
 			fireRedditCustomEvent(platform.event_type);
@@ -1244,8 +1296,14 @@ function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
 	}
 
 	for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
+		let enhanced_user_data;
+		if (options.use_google_ads_enhanced_user_data) {
+			enhanced_user_data = getGAEnhancedUserData();
+		}
+
 		gtag("event", event_type, {
 			send_to: options.google_ads_send_to_ids[i],
+			user_data: enhanced_user_data,
 		});
 	}
 }
@@ -1262,12 +1320,23 @@ function fireTaboolaCustomEvent(event_type, event_name) {
 	_tfa.push({ notify: "event", name: event_type, id: mw_telemetry_settings.taboola_pixel_id });
 }
 
-function fireTwitterCustomEvent(event_type) {
+function fireTwitterCustomEvent(event_type, options = {}) {
 	if (typeof twq === "undefined") {
 		throw new MasterworksTelemetryError("twq is undefined").reportError();
 	}
 
-	twq("track", event_type);
+	if (!options.twitter_event_ids || !Array.isArray(options.twitter_event_ids) || options.twitter_event_ids.length === 0) {
+		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids: " + options.twitter_event_ids).reportError();
+	}
+
+	const userData = rudderanalytics.getUserTraits();
+
+	for (let i = 0; i < options.twitter_event_ids.length; i++) {
+		twq("event", options.twitter_event_ids[i], {
+			email_address: userData.email,
+			phone_number: userData.phone,
+		});
+	}
 }
 
 function fireRedditCustomEvent(event_type) {
@@ -1487,6 +1556,8 @@ class IdentificationConfiguration {
 	}
 
 	fireIdentificationEvent(fieldValue, fieldType = "email") {
+		/* ------------------------------- Rudderstack ------------------------------ */
+
 		if (!fieldValue) {
 			return;
 		}
@@ -1654,4 +1725,49 @@ if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
 
 		productSearchConfiguration.fireProductSearchEvent();
 	});
+}
+
+/* --------------------------- GA Helper Function --------------------------- */
+function getGAEnhancedUserData() {
+	const currentTraits = rudderanalytics.getUserTraits();
+	const use_google_ads_enhanced_user_data = {};
+
+	if (currentTraits.email) {
+		use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
+	}
+
+	if (currentTraits.phone) {
+		let e164PhoneNumber = "+1" + currentTraits.phone;
+		use_google_ads_enhanced_user_data.phone_number = e164PhoneNumber;
+	}
+
+	if (currentTraits.zip) {
+		use_google_ads_enhanced_user_data.zip = currentTraits.zip;
+	}
+
+	if (currentTraits.address && currentTraits.address.city) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
+	}
+
+	if (currentTraits.address && currentTraits.address.state) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
+	}
+
+	if (currentTraits.address && currentTraits.address.postalCode) {
+		if (!use_google_ads_enhanced_user_data.address) {
+			use_google_ads_enhanced_user_data.address = {};
+		}
+
+		use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
+	}
+
+	return use_google_ads_enhanced_user_data;
 }
