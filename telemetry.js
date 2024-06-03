@@ -1,4 +1,11 @@
-console.log("Masterworks Telemetry Loaded 1");
+document.addEventListener("load", function () {
+	console.log("Masterworks Telemetry Loaded");
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+	console.log("DOM fully loaded and parsed");
+});
+
 document.addEventListener("DOMContentLoaded", () => {
 	console.log("Masterworks Telemetry Loaded");
 	/* -------------------------------------------------------------------------- */
