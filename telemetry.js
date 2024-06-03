@@ -1,5 +1,4 @@
 window.onload = function () {
-	console.log("Masterworks Telemetry Loaded");
 	/* -------------------------------------------------------------------------- */
 	/*                                   Errors                                   */
 	/* -------------------------------------------------------------------------- */
@@ -424,33 +423,31 @@ window.onload = function () {
 	/* -------------------------------------------------------------------------- */
 
 	/* -------------------- Set Triggers for Ecommerce Events ------------------- */
-	document.addEventListener("DOMContentLoaded", function () {
-		if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
-			mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
-				if (!Array.isArray(configuration.triggers)) {
-					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
-						configuration: configuration,
-					}).reportError();
-				}
+	if (mw_telemetry_settings.ecommerce_configurations && mw_telemetry_settings.ecommerce_configurations.length > 0 && !mw_telemetry_settings.events_disabled) {
+		mw_telemetry_settings.ecommerce_configurations.forEach((configuration) => {
+			if (!Array.isArray(configuration.triggers)) {
+				throw new MasterworksTelemetryError("Invalid ecommerce_configuration.triggers", {
+					configuration: configuration,
+				}).reportError();
+			}
 
-				configuration.triggers.forEach((trigger) => {
-					const initializeInterval = setInterval(() => {
-						if (typeof set_mw_trigger !== "undefined") {
-							try {
-								set_mw_trigger(trigger, () => {
-									triggerMWEcommerceEvent(configuration);
-								});
-							} catch (error) {
-								console.error(error);
-							} finally {
-								clearInterval(initializeInterval);
-							}
+			configuration.triggers.forEach((trigger) => {
+				const initializeInterval = setInterval(() => {
+					if (typeof set_mw_trigger !== "undefined") {
+						try {
+							set_mw_trigger(trigger, () => {
+								triggerMWEcommerceEvent(configuration);
+							});
+						} catch (error) {
+							console.error(error);
+						} finally {
+							clearInterval(initializeInterval);
 						}
-					}, 100);
-				});
+					}
+				}, 100);
 			});
-		}
-	});
+		});
+	}
 
 	/* ------------------------ Ecommerce Event Functions ----------------------- */
 
