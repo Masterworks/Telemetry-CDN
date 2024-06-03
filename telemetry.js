@@ -1,10 +1,6 @@
-document.addEventListener("load", function () {
-	console.log("Masterworks Telemetry Loaded");
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-	console.log("DOM fully loaded and parsed");
-});
+window.onload = function () {
+	console.log("Masterworks Telemetry Loaded in onload");
+};
 
 document.addEventListener("DOMContentLoaded", () => {
 	console.log("Masterworks Telemetry Loaded");
