@@ -1,8 +1,4 @@
 window.onload = function () {
-	console.log("Masterworks Telemetry Loaded in onload");
-};
-
-document.addEventListener("DOMContentLoaded", () => {
 	console.log("Masterworks Telemetry Loaded");
 	/* -------------------------------------------------------------------------- */
 	/*                                   Errors                                   */
@@ -1675,4 +1671,4 @@ document.addEventListener("DOMContentLoaded", () => {
 			productSearchConfiguration.fireProductSearchEvent();
 		});
 	}
-});
+};
