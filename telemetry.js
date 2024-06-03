@@ -1,3 +1,4 @@
+console.log("Masterworks Telemetry Loaded 1");
 document.addEventListener("DOMContentLoaded", () => {
 	console.log("Masterworks Telemetry Loaded");
 	/* -------------------------------------------------------------------------- */
