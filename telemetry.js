@@ -1634,10 +1634,29 @@ class IdentificationConfiguration {
 			console.error(error);
 		}
 	}
+
+	matchesExclusionUrls() {
+		if (!this.configuration.exclude_urls || this.configuration.exclude_urls.length < 1) {
+			return false;
+		}
+
+		for (let i = 0; i < this.configuration.exclude_urls.length; i++) {
+			if (window.location.href.includes(this.configuration.exclude_urls[i])) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
 if (mw_telemetry_settings.identification_configuration) {
 	const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
+
+	if (indentificationConfiguration.matchesExclusionUrls()) {
+		return;
+	}
+
 	if (indentificationConfiguration.configuration.timeout) {
 		setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
 	} else {
