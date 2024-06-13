@@ -5,7 +5,7 @@ async function sendMWMessage(message, data = {}) {
 
 	const payload = {
 		message,
-		...data,
+		data,
 	};
 
 	try {
