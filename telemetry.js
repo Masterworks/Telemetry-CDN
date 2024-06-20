@@ -106,6 +106,10 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["event_name"]);
 		mw_trigger_detect_dataLayer_event(trigger.event_name, callback);
 	},
+	dataLayer_event_interval: (trigger, callback) => {
+		validateTriggerFields(trigger, ["event_name"]);
+		mw_trigger_detect_dataLayer_event_interval(trigger.event_name, callback);
+	},
 	parameter_equals: (trigger, callback) => {
 		validateTriggerFields(trigger, ["parameter_key", "parameter_value"]);
 		mw_trigger_parameter_equals(trigger.parameter_key, trigger.parameter_value, callback);
@@ -218,6 +222,22 @@ function mw_trigger_detect_dataLayer_event(event_name, callback) {
 			callback();
 		}
 	});
+}
+
+function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
+	setInterval(function () {
+		for (let i = 0; i < dataLayer.length; i++) {
+			if (dataLayer[i].masterworks_processed) {
+				continue;
+			}
+
+			dataLayer[i].masterworks_processed = true;
+
+			if (dataLayer[i].event === event_name) {
+				callback();
+			}
+		}
+	}, 250);
 }
 
 function mw_trigger_parameter_equals(parameter_key, parameter_value, callback) {
