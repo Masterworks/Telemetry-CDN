@@ -106,6 +106,10 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["event_name"]);
 		mw_trigger_detect_dataLayer_event(trigger.event_name, callback);
 	},
+	dataLayer_event_interval: (trigger, callback) => {
+		validateTriggerFields(trigger, ["event_name"]);
+		mw_trigger_detect_dataLayer_event_interval(trigger.event_name, callback);
+	},
 	parameter_equals: (trigger, callback) => {
 		validateTriggerFields(trigger, ["parameter_key", "parameter_value"]);
 		mw_trigger_parameter_equals(trigger.parameter_key, trigger.parameter_value, callback);
@@ -218,6 +222,22 @@ function mw_trigger_detect_dataLayer_event(event_name, callback) {
 			callback();
 		}
 	});
+}
+
+function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
+	setInterval(function () {
+		for (let i = 0; i < dataLayer.length; i++) {
+			if (dataLayer[i].masterworks_processed) {
+				continue;
+			}
+
+			dataLayer[i].masterworks_processed = true;
+
+			if (dataLayer[i].event === event_name) {
+				callback();
+			}
+		}
+	}, 250);
 }
 
 function mw_trigger_parameter_equals(parameter_key, parameter_value, callback) {
@@ -1634,14 +1654,31 @@ class IdentificationConfiguration {
 			console.error(error);
 		}
 	}
+
+	matchesExclusionUrls() {
+		if (!this.configuration.exclude_urls || this.configuration.exclude_urls.length < 1) {
+			return false;
+		}
+
+		for (let i = 0; i < this.configuration.exclude_urls.length; i++) {
+			if (window.location.href.includes(this.configuration.exclude_urls[i])) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
 if (mw_telemetry_settings.identification_configuration) {
 	const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
-	if (indentificationConfiguration.configuration.timeout) {
-		setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
-	} else {
-		indentificationConfiguration.setIdentificationEvents();
+
+	if (!indentificationConfiguration.matchesExclusionUrls()) {
+		if (indentificationConfiguration.configuration.timeout) {
+			setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
+		} else {
+			indentificationConfiguration.setIdentificationEvents();
+		}
 	}
 }
 
