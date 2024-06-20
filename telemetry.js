@@ -1673,14 +1673,12 @@ class IdentificationConfiguration {
 if (mw_telemetry_settings.identification_configuration) {
 	const indentificationConfiguration = new IdentificationConfiguration(mw_telemetry_settings.identification_configuration);
 
-	if (indentificationConfiguration.matchesExclusionUrls()) {
-		return;
-	}
-
-	if (indentificationConfiguration.configuration.timeout) {
-		setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
-	} else {
-		indentificationConfiguration.setIdentificationEvents();
+	if (!indentificationConfiguration.matchesExclusionUrls()) {
+		if (indentificationConfiguration.configuration.timeout) {
+			setTimeout(indentificationConfiguration.setIdentificationEvents(), indentificationConfiguration.configuration.timeout);
+		} else {
+			indentificationConfiguration.setIdentificationEvents();
+		}
 	}
 }
 
