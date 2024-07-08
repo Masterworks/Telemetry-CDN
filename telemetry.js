@@ -641,39 +641,48 @@ function triggerPiwikEcommerceEvent(ecommerce_data, options = {}, event_type = "
 
 // ** Facebook ** //
 function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type = "Purchase") {
-	if (typeof fbq === "undefined") {
-		throw new MasterworksTelemetryError("fbq is undefined", {
-			ecommerce_data: ecommerce_data,
-			event_type: event_type,
-			options: options,
-		}).reportError();
-	}
+	const interval = setInterval(() => {
+		if (typeof fbq !== "undefined") {
+			clearInterval(interval);
 
-	if (!options.sustainer_only) {
-		if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
-			for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
-				fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, {
-					value: ecommerce_data.total_transaction_amount,
-					currency: "USD",
-					content_ids: ecommerce_data.items.map((item) => item.sku),
-					content_name: ecommerce_data.items.map((item) => item.name).join(","),
-				});
+			if (!options.sustainer_only) {
+				if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
+					for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
+						fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, {
+							value: ecommerce_data.total_transaction_amount,
+							currency: "USD",
+							content_ids: ecommerce_data.items.map((item) => item.sku),
+							content_name: ecommerce_data.items.map((item) => item.name).join(","),
+						});
+					}
+				} else {
+					fbq("track", event_type, {
+						value: ecommerce_data.total_transaction_amount,
+						currency: "USD",
+						content_ids: ecommerce_data.items.map((item) => item.sku),
+						content_name: ecommerce_data.items.map((item) => item.name).join(","),
+					});
+				}
 			}
-		} else {
-			fbq("track", event_type, {
-				value: ecommerce_data.total_transaction_amount,
-				currency: "USD",
-				content_ids: ecommerce_data.items.map((item) => item.sku),
-				content_name: ecommerce_data.items.map((item) => item.name).join(","),
+
+			ecommerce_data.items.forEach((item) => {
+				if (item.category === "sustainer") {
+					fbq("trackCustom", "SustainerDonation", { value: item.amount, currency: "USD", content_ids: item.sku, content_name: item.name });
+				}
 			});
 		}
-	}
+	}, 250);
 
-	ecommerce_data.items.forEach((item) => {
-		if (item.category === "sustainer") {
-			fbq("trackCustom", "SustainerDonation", { value: item.amount, currency: "USD", content_ids: item.sku, content_name: item.name });
+	setTimeout(() => {
+		if (typeof fbq === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("fbq is still undefined after 30 seconds", {
+				ecommerce_data: ecommerce_data,
+				event_type: event_type,
+				options: options,
+			}).reportError();
 		}
-	});
+	}, 30000);
 }
 
 // ** Adform ** //
@@ -1233,16 +1242,29 @@ function firePiwikCustomEvent(event_type, event_name, options = {}) {
 }
 
 function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata = {}) {
-	if (typeof fbq === "undefined") {
-		throw new MasterworksTelemetryError("fbq is undefined").reportError();
-	}
+	const interval = setInterval(() => {
+		if (typeof fbq !== "undefined") {
+			clearInterval(interval);
 
-	if (options.facebook_track_custom) {
-		fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
-		return;
-	}
+			if (options.facebook_track_custom) {
+				fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
+			} else {
+				fbq("track", event_type, { content_name: event_name, ...metadata });
+			}
+		}
+	}, 250);
 
-	fbq("track", event_type, { content_name: event_name, ...metadata });
+	setTimeout(() => {
+		if (typeof fbq === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("fbq is still undefined after 30 seconds", {
+				event_type: event_type,
+				event_name: event_name,
+				options: options,
+				metadata: metadata,
+			}).reportError();
+		}
+	}, 30000);
 }
 
 function fireAdformCustomEvent(event_type, event_name) {
