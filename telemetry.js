@@ -38,6 +38,10 @@ class MasterworksTelemetryError extends Error {
 					throw new Error("client_abbreviation is undefined");
 				}
 
+				if (mw_telemetry_settings.disable_error_reporting) {
+					return;
+				}
+
 				if (typeof this.message !== "string") {
 					throw new Error("invalid error message. Must be string.");
 				}
