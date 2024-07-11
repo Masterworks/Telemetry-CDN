@@ -141,10 +141,6 @@ const mw_trigger_types = {
 	page_view: (trigger, callback) => {
 		callback();
 	},
-	pathname_exact_match: (trigger, callback) => {
-		validateTriggerFields(trigger, ["pathname"]);
-		mw_trigger_pathname_exact_match(trigger.pathname, callback);
-	},
 };
 
 function validateTriggerFields(trigger, fields) {
