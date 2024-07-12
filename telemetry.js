@@ -1329,25 +1329,38 @@ function fireIlluminCustomEvent(illumin_pg) {
 }
 
 function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
-	if (typeof gtag === "undefined") {
-		throw new MasterworksTelemetryError("gtag is undefined").reportError();
-	}
+	const interval = setInterval(() => {
+		if (typeof gtag !== "undefined") {
+			clearInterval(interval);
 
-	if (!options.google_ads_send_to_ids || !Array.isArray(options.google_ads_send_to_ids) || options.google_ads_send_to_ids.length === 0) {
-		throw new MasterworksTelemetryError("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids).reportError();
-	}
+			if (!options.google_ads_send_to_ids || !Array.isArray(options.google_ads_send_to_ids) || options.google_ads_send_to_ids.length === 0) {
+				throw new MasterworksTelemetryError("Invalid options.google_ads_send_to_ids: " + options.google_ads_send_to_ids).reportError();
+			}
 
-	for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
-		let enhanced_user_data;
-		if (options.use_google_ads_enhanced_user_data) {
-			enhanced_user_data = getGAEnhancedUserData();
+			for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
+				let enhanced_user_data;
+				if (options.use_google_ads_enhanced_user_data) {
+					enhanced_user_data = getGAEnhancedUserData();
+				}
+
+				gtag("event", event_type, {
+					send_to: options.google_ads_send_to_ids[i],
+					user_data: enhanced_user_data,
+				});
+			}
 		}
+	}, 250);
 
-		gtag("event", event_type, {
-			send_to: options.google_ads_send_to_ids[i],
-			user_data: enhanced_user_data,
-		});
-	}
+	setTimeout(() => {
+		if (typeof gtag === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("gtag is still undefined after 30 seconds", {
+				event_type: event_type,
+				event_name: event_name,
+				options: options,
+			}).reportError();
+		}
+	}, 30000);
 }
 
 function fireTaboolaCustomEvent(event_type, event_name) {
