@@ -1001,15 +1001,27 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 
 // ** LinkedIn ** //
 function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
-	if (typeof window.lintrk === "undefined") {
-		throw new MasterworksTelemetryError("window.lintrk is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
-	}
-
 	if (typeof options.linkedin_conversion_id === "undefined") {
 		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+	const interval = setInterval(() => {
+		if (typeof window.lintrk !== "undefined") {
+			clearInterval(interval);
+			window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+		}
+	}, 250);
+
+	setTimeout(() => {
+		if (typeof window.lintrk === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("window.lintrk is still undefined after 30 seconds", {
+				ecommerce_data: ecommerce_data,
+				event_type: event_type,
+				options: options,
+			}).reportError();
+		}
+	}, 30000);
 }
 
 // ** Twitter ** //
@@ -1443,7 +1455,21 @@ function fireLinkedInCustomEvent(options = {}) {
 		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined").reportError();
 	}
 
-	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+	const interval = setInterval(() => {
+		if (typeof window.lintrk !== "undefined") {
+			clearInterval(interval);
+			window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+		}
+	}, 250);
+
+	setTimeout(() => {
+		if (typeof window.lintrk === "undefined") {
+			clearInterval(interval);
+			throw new MasterworksTelemetryError("window.lintrk is still undefined after 30 seconds", {
+				options: options,
+			}).reportError();
+		}
+	}, 30000);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
