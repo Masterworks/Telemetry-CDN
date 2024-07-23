@@ -178,6 +178,20 @@ function set_mw_trigger(trigger, callback) {
 		}
 	}
 
+	if (trigger.exclude_urls) {
+		if (!Array.isArray(trigger.exclude_urls)) {
+			throw new MasterworksTelemetryError("Invalid trigger.exclude_urls", { trigger: trigger }).reportError();
+		}
+
+		if (!trigger.exclude_urls.every((url) => typeof url === "string")) {
+			throw new MasterworksTelemetryError("Invalid trigger.exclude_urls", { trigger: trigger }).reportError();
+		}
+
+		if (trigger.exclude_urls.some((url) => matches_current_url(url))) {
+			return;
+		}
+	}
+
 	if (trigger.timeout) {
 		setTimeout(() => {
 			mw_trigger_types[trigger.type](trigger, callback);
@@ -1130,8 +1144,6 @@ if (mw_telemetry_settings.custom_event_configurations && mw_telemetry_settings.c
 		if (!configuration.triggers || !Array.isArray(configuration.triggers) || configuration.triggers.length === 0) {
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.triggers", { configuration: configuration }).reportError();
 		}
-
-		configuration.triggers.forEach((trigger) => {});
 
 		if (!configuration.platforms || !Array.isArray(configuration.platforms) || configuration.platforms.length === 0) {
 			throw new MasterworksTelemetryError("Invalid custom_event_configurations.platforms", { configuration: configuration }).reportError();
