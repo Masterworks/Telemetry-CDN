@@ -114,6 +114,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "linkedin":
 					triggerLinkedInEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "vwo":
+					triggerVwoEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform);
 			}
@@ -499,6 +502,20 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 	}
 
 	window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+}
+
+// ** Vwo ** //
+function triggerVwoEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	window.VWO = window.VWO || [];
+	VWO.event =
+		VWO.event ||
+		function () {
+			VWO.push(["event"].concat([].slice.call(arguments)));
+		};
+
+	VWO.event(event_type, {
+		revenue: ecommerce_data.total_transaction_amount,
+	});
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
