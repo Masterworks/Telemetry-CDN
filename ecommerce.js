@@ -506,6 +506,7 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 
 // ** Vwo ** //
 function triggerVwoEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	console.log("logging 1");
 	window.VWO = window.VWO || [];
 	VWO.event =
 		VWO.event ||
