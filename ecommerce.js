@@ -515,6 +515,7 @@ function triggerVwoEcommerceEvent(ecommerce_data, options = {}, event_type = "pu
 
 	VWO.event(event_type, {
 		revenue: ecommerce_data.total_transaction_amount,
+		checkout: true,
 	});
 }
 
