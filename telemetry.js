@@ -535,6 +535,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 
 	configuration.platforms.forEach((platform) => {
 		try {
+			console.log(platform.name);
 			switch (platform.name) {
 				case "rudderstack":
 					triggerRudderstackEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
@@ -585,6 +586,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 					triggerTwitterEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				case "vwo":
+					console.log("vwo");
 					triggerVwoEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
 				default:
