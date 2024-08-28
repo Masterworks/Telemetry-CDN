@@ -680,7 +680,7 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 
 			ecommerce_data.items.forEach((item) => {
 				if (item.category === "sustainer") {
-					fbq("trackCustom", "SustainerDonation", { value: item.amount, currency: "USD", content_ids: item.sku, content_name: item.name });
+					fbq("trackCustom", "SustainerDonation", { value: item.price, currency: "USD", content_ids: item.sku, content_name: item.name });
 				}
 			});
 		}
@@ -1068,7 +1068,7 @@ function triggerTwitterEcommerceEvent(ecommerce_data, options = {}, event_type =
 			if (item.category === "sustainer") {
 				for (let i = 0; i < options.twitter_sustainer_event_ids.length; i++) {
 					twq("event", options.twitter_sustainer_event_ids[i], {
-						value: item.amount,
+						value: item.price,
 						currency: "USD",
 						conversion_id: ecommerce_data.transaction_id + "-" + item.sku,
 						email_address: userData.email,
