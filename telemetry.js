@@ -587,6 +587,8 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "vwo":
 					triggerVwoEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "reddit":
+					triggerRedditEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform).reportError();
 			}
@@ -1092,6 +1094,20 @@ function triggerVwoEcommerceEvent(ecommerce_data, options = {}, event_type = "pu
 	VWO.event(event_type, {
 		revenue: ecommerce_data.total_transaction_amount,
 		checkout: true,
+	});
+}
+
+// ** Reddit ** //
+function triggerRedditEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
+	if (typeof rdt === "undefined") {
+		throw new MasterworksTelemetryError("rdt is undefined").reportError();
+	}
+
+	rdt("track", event_type, {
+		itemCount: ecommerce_data.items.length,
+		value: ecommerce_data.total_transaction_amount,
+		currency: "USD",
+		conversionId: ecommerce_data.transaction_id,
 	});
 }
 
