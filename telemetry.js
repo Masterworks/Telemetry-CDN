@@ -1107,7 +1107,7 @@ function triggerRedditEcommerceEvent(ecommerce_data, options = {}, event_type = 
 		itemCount: ecommerce_data.items.length,
 		value: ecommerce_data.total_transaction_amount,
 		currency: "USD",
-		conversionId: ecommerce_data.transaction_id,
+		transactionId: ecommerce_data.transaction_id,
 	});
 }
 
