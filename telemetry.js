@@ -590,7 +590,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "reddit":
 					triggerRedditEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 				default:
-					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform).reportError();
+					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
 		} catch (error) {
 			console.error(error);
