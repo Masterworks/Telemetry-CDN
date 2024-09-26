@@ -440,7 +440,7 @@ function initiatePiwikIdToRudderstack() {
 }
 
 function getPiwikCookieId() {
-	const piwikCookieRegex = /_pk_id\.[a-z0-9-]+\.[a-z0-9]+=([^;]+);?/;
+	const piwikCookieRegex = /_pk_id\.[a-z0-9]+(?:-[a-z0-9]+)+\.[a-z0-9]+=([^;]+);?/;
 	const match = document.cookie.match(piwikCookieRegex);
 
 	if (match) {
