@@ -590,6 +590,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "reddit":
 					triggerRedditEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "optimonk":
+					triggerOptimonkEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1110,6 +1113,15 @@ function triggerRedditEcommerceEvent(ecommerce_data, options = {}, event_type = 
 		currency: "USD",
 		conversionId: ecommerce_data.transaction_id,
 	});
+}
+
+// ** Optimonk ** //
+function triggerOptimonkEcommerceEvent(ecommerce_data, options = {}, event_type = "Donation") {
+	if (typeof omEvents === "undefined") {
+		throw new MasterworksTelemetryError("optimonk is undefined").reportError();
+	}
+
+	omEvents.push([event_type]);
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
