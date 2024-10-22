@@ -1118,7 +1118,7 @@ function triggerRedditEcommerceEvent(ecommerce_data, options = {}, event_type = 
 // ** Optimonk ** //
 function triggerOptimonkEcommerceEvent(ecommerce_data, options = {}, event_type = "Donation") {
 	if (typeof omEvents === "undefined") {
-		throw new MasterworksTelemetryError("optimonk is undefined").reportError();
+		return;
 	}
 
 	omEvents.push([event_type]);
