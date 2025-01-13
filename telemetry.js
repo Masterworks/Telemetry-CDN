@@ -378,7 +378,7 @@ function SetMWCustomDimensions() {
 function InitiateMWCustomDimensions() {
 	let mwCustomDimensionsIntervalCleared = false;
 	let mwCustomDimensionsInterval = setInterval(function () {
-		if (typeof rudderanalytics !== "undefined") {
+		if (typeof rudderanalytics !== "undefined" && typeof rudderanalytics.getAnonymousId !== "undefined") {
 			const rudderstackAnonymousID = rudderanalytics.getAnonymousId();
 			if (typeof rudderstackAnonymousID !== "undefined") {
 				if (!mwCustomDimensionsIntervalCleared) {
