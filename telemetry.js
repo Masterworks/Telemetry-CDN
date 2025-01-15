@@ -1715,7 +1715,7 @@ class IdentificationConfiguration {
 
 		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
 
-		const currentTraits = rudderanalytics.getUserTraits();
+		const currentTraits = rudderanalytics.getUserTraits() || {};
 		let userID = rudderanalytics.getUserId();
 
 		if (fieldType === "email") {
@@ -1756,7 +1756,7 @@ class IdentificationConfiguration {
 
 	fireCustomIdentificationEvent(configuration) {
 		try {
-			const traits = rudderanalytics.getUserTraits();
+			const traits = rudderanalytics.getUserTraits() || {};
 			const identifyData = getMWIdentificationData(configuration.configuration_name);
 			if (identifyData) {
 				let email = "";
