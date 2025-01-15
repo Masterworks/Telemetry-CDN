@@ -767,9 +767,17 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 	}
 
 	options.google_ads_send_to_ids.forEach((google_ads_send_to_id) => {
-		let enhanced_user_data;
 		if (options.use_google_ads_enhanced_user_data) {
-			enhanced_user_data = getGAEnhancedUserData();
+			getGAEnhancedUserData().then((data) => {
+				gtag("event", event_type, {
+					send_to: google_ads_send_to_id,
+					value: ecommerce_data.total_transaction_amount,
+					currency: "USD",
+					transaction_id: ecommerce_data.transaction_id,
+					user_data: data,
+				});
+			});
+			return;
 		}
 
 		gtag("event", event_type, {
@@ -777,7 +785,6 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 			value: ecommerce_data.total_transaction_amount,
 			currency: "USD",
 			transaction_id: ecommerce_data.transaction_id,
-			user_data: enhanced_user_data,
 		});
 	});
 }
@@ -1409,15 +1416,19 @@ function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
 			}
 
 			for (let i = 0; i < options.google_ads_send_to_ids.length; i++) {
-				let enhanced_user_data;
 				if (options.use_google_ads_enhanced_user_data) {
-					enhanced_user_data = getGAEnhancedUserData();
+					getGAEnhancedUserData().then((data) => {
+						gtag("event", event_type, {
+							send_to: options.google_ads_send_to_ids[i],
+							user_data: data,
+						});
+					});
+					continue;
+				} else {
+					gtag("event", event_type, {
+						send_to: options.google_ads_send_to_ids[i],
+					});
 				}
-
-				gtag("event", event_type, {
-					send_to: options.google_ads_send_to_ids[i],
-					user_data: enhanced_user_data,
-				});
 			}
 		}
 	}, 250);
@@ -1885,46 +1896,68 @@ if (Array.isArray(mw_telemetry_settings.product_search_configurations)) {
 }
 
 /* --------------------------- GA Helper Function --------------------------- */
-function getGAEnhancedUserData() {
-	const currentTraits = rudderanalytics.getUserTraits();
-	const use_google_ads_enhanced_user_data = {};
+async function getGAEnhancedUserData() {
+	const maxWaitTime = 10000; // Maximum wait time in milliseconds (10 seconds)
+	const intervalTime = 500; // Polling interval in milliseconds (0.5 seconds)
 
-	if (currentTraits.email) {
-		use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
-	}
+	const waitForTraits = () => {
+		return new Promise((resolve, reject) => {
+			const startTime = Date.now();
 
-	if (currentTraits.phone) {
-		let e164PhoneNumber = "+1" + currentTraits.phone;
-		use_google_ads_enhanced_user_data.phone_number = e164PhoneNumber;
-	}
+			const interval = setInterval(() => {
+				const currentTraits = rudderanalytics.getUserTraits();
+				if (currentTraits) {
+					clearInterval(interval);
+					resolve(currentTraits);
+				} else if (Date.now() - startTime >= maxWaitTime) {
+					clearInterval(interval);
+					reject(new Error("Timeout waiting for user traits."));
+				}
+			}, intervalTime);
+		});
+	};
 
-	if (currentTraits.zip) {
-		use_google_ads_enhanced_user_data.zip = currentTraits.zip;
-	}
+	try {
+		const currentTraits = await waitForTraits();
+		const use_google_ads_enhanced_user_data = {};
 
-	if (currentTraits.address && currentTraits.address.city) {
-		if (!use_google_ads_enhanced_user_data.address) {
-			use_google_ads_enhanced_user_data.address = {};
+		if (currentTraits.email) {
+			use_google_ads_enhanced_user_data.email = currentTraits.email.trim();
 		}
 
-		use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
-	}
-
-	if (currentTraits.address && currentTraits.address.state) {
-		if (!use_google_ads_enhanced_user_data.address) {
-			use_google_ads_enhanced_user_data.address = {};
+		if (currentTraits.phone) {
+			let e164PhoneNumber = "+1" + currentTraits.phone;
+			use_google_ads_enhanced_user_data.phone_number = e164PhoneNumber;
 		}
 
-		use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
-	}
-
-	if (currentTraits.address && currentTraits.address.postalCode) {
-		if (!use_google_ads_enhanced_user_data.address) {
-			use_google_ads_enhanced_user_data.address = {};
+		if (currentTraits.zip) {
+			use_google_ads_enhanced_user_data.zip = currentTraits.zip;
 		}
 
-		use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
-	}
+		if (currentTraits.address && currentTraits.address.city) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.city = currentTraits.address.city;
+		}
 
-	return use_google_ads_enhanced_user_data;
+		if (currentTraits.address && currentTraits.address.state) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.region = currentTraits.address.state;
+		}
+
+		if (currentTraits.address && currentTraits.address.postalCode) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
+		}
+
+		return use_google_ads_enhanced_user_data;
+	} catch (error) {
+		console.error(error.message);
+		return null; // Return null or handle error as needed
+	}
 }
