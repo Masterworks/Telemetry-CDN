@@ -295,8 +295,9 @@ function mw_trigger_element_mousedown(selector, callback) {
 
 function mw_trigger_element_trigger_event(selector, trigger_event, callback) {
 	document.addEventListener(trigger_event, function (event) {
-		if (event.target && event.target.matches(selector)) {
-			callback.call(event.target, event);
+		const targetElement = event.target.closest(selector);
+		if (targetElement) {
+			callback.call(targetElement, event);
 		}
 	});
 }
