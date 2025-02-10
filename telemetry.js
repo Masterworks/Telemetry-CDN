@@ -138,6 +138,10 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["pathname"]);
 		mw_trigger_pathname_exact_match(trigger.pathname, callback);
 	},
+	javascript_message_contains_text: (trigger, callback) => {
+		validateTriggerFields(trigger, ["text"]);
+		mw_trigger_javascript_message_contains_text(trigger.text, callback);
+	},
 	page_view: (trigger, callback) => {
 		callback();
 	},
@@ -306,6 +310,14 @@ function mw_trigger_pathname_exact_match(pathname, callback) {
 	if (window.location.pathname === pathname) {
 		callback();
 	}
+}
+
+function mw_trigger_javascript_message_contains_text(text, callback) {
+	window.addEventListener("message", function (event) {
+		if (event.data.includes(text)) {
+			callback();
+		}
+	});
 }
 
 /* ---------------------------- Helper Functions ---------------------------- */
