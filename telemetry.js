@@ -134,6 +134,10 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["selector", "trigger_event"]);
 		mw_trigger_element_trigger_event(trigger.selector, trigger.trigger_event, callback);
 	},
+	element_trigger_event_v2: (trigger, callback) => {
+		validateTriggerFields(trigger, ["selector", "trigger_event"]);
+		mw_trigger_element_trigger_event_v2(trigger.selector, trigger.trigger_event, callback);
+	},
 	pathname_exact_match: (trigger, callback) => {
 		validateTriggerFields(trigger, ["pathname"]);
 		mw_trigger_pathname_exact_match(trigger.pathname, callback);
@@ -298,6 +302,12 @@ function mw_trigger_element_mousedown(selector, callback) {
 }
 
 function mw_trigger_element_trigger_event(selector, trigger_event, callback) {
+	document.querySelectorAll(selector).forEach((element) => {
+		element.addEventListener(trigger_event, callback);
+	});
+}
+
+function mw_trigger_element_trigger_event_v2(selector, trigger_event, callback) {
 	document.addEventListener(trigger_event, function (event) {
 		const targetElement = event.target.closest(selector);
 		if (targetElement) {
