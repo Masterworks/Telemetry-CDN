@@ -731,39 +731,55 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 
 // ** Adform ** //
 function triggerAdformEcommerceEvent(ecommerce_data, options = {}, event_type = "Donation") {
-	if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
-		throw new MasterworksTelemetryError("_adftrack is undefined", {
-			ecommerce_data: ecommerce_data,
-			event_type: event_type,
-		}).reportError();
-	}
+    if (typeof mw_telemetry_settings.adform_pixel_id === "undefined") {
+        throw new MasterworksTelemetryError("_adftrack is undefined", {
+            ecommerce_data: ecommerce_data,
+            event_type: event_type,
+        }).reportError();
+    }
 
-	window._adftrack = Array.isArray(window._adftrack) ? window._adftrack : window._adftrack ? [window._adftrack] : [];
-	window._adftrack.push({
-		pm: mw_telemetry_settings.adform_pixel_id,
-		divider: encodeURIComponent("|"),
-		pagename: encodeURIComponent("MW-" + event_type),
-		order: {
-			orderid: ecommerce_data.transaction_id,
-			sales: ecommerce_data.total_transaction_amount,
-			currency: "USD",
-			itms: ecommerce_data.items.map((item) => {
-				return {
-					productname: item.name,
-					categoryname: item.category,
-					productsales: item.price,
-					productcount: item.quantity,
-				};
-			}),
-		},
-	});
+    // Function to create and push tracking event
+    const pushAdformTrackingEvent = (type) => {
+        window._adftrack = Array.isArray(window._adftrack) ? window._adftrack : window._adftrack ? [window._adftrack] : [];
+        window._adftrack.push({
+            pm: mw_telemetry_settings.adform_pixel_id,
+            divider: encodeURIComponent("|"),
+            pagename: encodeURIComponent("MW-" + type),
+            order: {
+                orderid: ecommerce_data.transaction_id,
+                sales: ecommerce_data.total_transaction_amount,
+                currency: "USD",
+                itms: ecommerce_data.items.map((item) => {
+                    return {
+                        productname: item.name,
+                        categoryname: item.category,
+                        productsales: item.price,
+                        productcount: item.quantity,
+                    };
+                }),
+            },
+        });
+    };
 
-	var s = document.createElement("script");
-	s.type = "text/javascript";
-	s.async = true;
-	s.src = "https://a2.adform.net/serving/scripts/trackpoint/async/";
-	var x = document.getElementsByTagName("script")[0];
-	x.parentNode.insertBefore(s, x);
+    // Push original event
+    pushAdformTrackingEvent(event_type);
+
+    // Check if any item has 'sustainer' category and push additional sustainer event
+    const hasSustainer = ecommerce_data.items.some(item => 
+        item.category && item.category.toLowerCase() === 'sustainer'
+    );
+    
+    if (hasSustainer) {
+        pushAdformTrackingEvent("Sustainer");
+    }
+
+    // Load tracking script
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.async = true;
+    s.src = "https://a2.adform.net/serving/scripts/trackpoint/async/";
+    var x = document.getElementsByTagName("script")[0];
+    x.parentNode.insertBefore(s, x);
 }
 
 // ** Zemanta ** //
