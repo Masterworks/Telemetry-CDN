@@ -618,6 +618,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "optimonk":
 					triggerOptimonkEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "magellan":
+					triggerMagellanEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1172,6 +1175,28 @@ function triggerOptimonkEcommerceEvent(ecommerce_data, options = {}, event_type 
 	omEvents.push([event_type]);
 }
 
+// ** Magellan ** //
+function triggerMagellanEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	if (typeof MAI === "undefined") {
+		throw new MasterworksTelemetryError("MAI is undefined").reportError();
+	}
+
+	MAI.emit(event_type, 
+		ecommerce_data.total_transaction_amount, 
+		"USD", 
+		ecommerce_data.transaction_id, 
+		{
+			quantity: ecommerce_data.items.reduce((total, item) => total + item.quantity, 0),
+			lineItems: ecommerce_data.items.map(item => ({
+				quantity: item.quantity,
+				productId: item.sku,
+				productName: item.name,
+				productType: item.category,
+			}))
+		}
+	);
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
@@ -1325,6 +1350,9 @@ function handlePlatformEvent(platform, configuration) {
 			break;
 		case "linkedin":
 			fireLinkedInCustomEvent(platform.options);
+			break;
+		case "magellan":
+			fireMagellanCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
@@ -1581,6 +1609,21 @@ function fireLinkedInCustomEvent(options = {}) {
 			}).reportError();
 		}
 	}, 30000);
+}
+
+function fireMagellanCustomEvent(event_type, event_name, options = {}) {
+	if (typeof MAI === "undefined") {
+		throw new MasterworksTelemetryError("MAI is undefined").reportError();
+	}
+
+	if (event_type === "addToCart") {
+		MAI.emit(event_type, 1, 'USD', 1);
+		return;
+	}
+
+	MAI.emit(event_type, 1, 'USD', {
+		type: event_name
+	});
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
