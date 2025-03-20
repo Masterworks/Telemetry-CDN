@@ -1803,6 +1803,12 @@ class IdentificationConfiguration {
 		let userID = rudderanalytics.getUserId();
 
 		if (fieldType === "email") {
+
+			// Check if the email is valid
+			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fieldValue)) {
+				return;
+			}
+
 			currentTraits.email = fieldValue;
 			userID = fieldValue;
 
