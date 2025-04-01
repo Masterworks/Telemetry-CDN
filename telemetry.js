@@ -1735,8 +1735,6 @@ function fireDoubleClickCustomEvent(event_type, event_name, options = {}) {
 		getGAEnhancedUserData().then(userData => {
 			gtag('event', event_type, {
 				'allow_custom_scripts': true,
-				'value': ecommerce_data.total_transaction_amount,
-				'transaction_id': ecommerce_data.transaction_id,
 				'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/${event_type}`,
 				'user_data': userData,
 			});
