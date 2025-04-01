@@ -621,6 +621,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "magellan":
 					triggerMagellanEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "doubleclick":
+					triggerDoubleClickEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1197,6 +1200,92 @@ function triggerMagellanEcommerceEvent(ecommerce_data, options = {}, event_type 
 	);
 }
 
+// ** DoubleClick ** //
+function triggerDoubleClickEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+    if (typeof gtag === "undefined") {
+        throw new MasterworksTelemetryError("gtag is undefined").reportError();
+    }
+
+	if (!options.doubleclick_advertiser_id || typeof options.doubleclick_advertiser_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.doubleclick_advertiser_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	if (!options.doubleclick_type || typeof options.doubleclick_type !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.doubleclick_type", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	}
+
+	if (options.use_google_ads_enhanced_user_data){
+
+		getGAEnhancedUserData().then(userData => {
+			gtag('event', 'purchase', {
+				'allow_custom_scripts': true,
+				'value': ecommerce_data.total_transaction_amount,
+				'transaction_id': ecommerce_data.transaction_id,
+				'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/purch0+transactions`,
+				'user_data': userData,
+			});
+
+			ecommerce_data.items.forEach(item => {
+				if (item.category === "sustainer") {
+					gtag('event', 'purchase', {
+						'allow_custom_scripts': true,
+						'value': item.price,
+						'transaction_id': ecommerce_data.transaction_id + "-" + item.sku,
+						'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/susta0+transactions`,
+						'user_data': userData,
+					});
+				}
+			});
+			
+		})
+	} else {
+		// Track regular purchase
+		gtag('event', 'purchase', {
+			'allow_custom_scripts': true,
+			'value': ecommerce_data.total_transaction_amount,
+			'transaction_id': ecommerce_data.transaction_id,
+			'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/purch0+transactions`
+		});
+
+		// Check if any items are sustainer donations and track separately
+		ecommerce_data.items.forEach(item => {
+			if (item.category === "sustainer") {
+				gtag('event', 'purchase', {
+					'allow_custom_scripts': true,
+					'value': item.price,
+					'transaction_id': ecommerce_data.transaction_id + "-" + item.sku,
+					'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/susta0+transactions`
+				});
+			}
+		});
+		
+	}
+    // Add noscript image tags for fallback tracking
+    const noscriptPurchase = document.createElement('noscript');
+    const imgPurchase = document.createElement('img');
+    imgPurchase.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=purch0;qty=1;cost=${ecommerce_data.total_transaction_amount};ord=${ecommerce_data.transaction_id}?`;
+    imgPurchase.width = "1";
+    imgPurchase.height = "1";
+    imgPurchase.alt = "";
+    noscriptPurchase.appendChild(imgPurchase);
+    document.body.appendChild(noscriptPurchase);
+
+    // Add noscript image tags for sustainer donations
+    ecommerce_data.items.forEach(item => {
+        if (item.category === "sustainer") {
+            const noscriptSustainer = document.createElement('noscript');
+            const imgSustainer = document.createElement('img');
+            imgSustainer.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=susta0;qty=1;cost=${item.price};ord=${ecommerce_data.transaction_id}-${item.sku}?`;
+            imgSustainer.width = "1";
+            imgSustainer.height = "1";
+            imgSustainer.alt = "";
+            noscriptSustainer.appendChild(imgSustainer);
+            document.body.appendChild(noscriptSustainer);
+        }
+    });
+
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
@@ -1353,6 +1442,9 @@ function handlePlatformEvent(platform, configuration) {
 			break;
 		case "magellan":
 			fireMagellanCustomEvent(platform.event_type, configuration.event_name, platform.options);
+			break;
+		case "doubleclick":
+			fireDoubleClickCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
@@ -1624,6 +1716,51 @@ function fireMagellanCustomEvent(event_type, event_name, options = {}) {
 	MAI.emit(event_type, 1, 'USD', {
 		type: event_name
 	});
+}
+
+function fireDoubleClickCustomEvent(event_type, event_name, options = {}) {
+	if (typeof gtag === "undefined") {
+		throw new MasterworksTelemetryError("gtag is undefined").reportError();
+	}
+	
+	if (!options.doubleclick_advertiser_id || typeof options.doubleclick_advertiser_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.doubleclick_advertiser_id", { event_type: event_type, event_name: event_name, options: options }).reportError();
+	}
+
+	if (!options.doubleclick_type || typeof options.doubleclick_type !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.doubleclick_type", { event_type: event_type, event_name: event_name, options: options }).reportError();
+	}
+
+	if (options.use_google_ads_enhanced_user_data) {
+		getGAEnhancedUserData().then(userData => {
+			gtag('event', event_type, {
+				'allow_custom_scripts': true,
+				'value': ecommerce_data.total_transaction_amount,
+				'transaction_id': ecommerce_data.transaction_id,
+				'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/${event_type}`,
+				'user_data': userData,
+			});
+		});
+	} else {
+		gtag('event', event_type, {
+			'allow_custom_scripts': true,
+			'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/${event_type}`,
+		});
+	}
+	
+
+	 // Add noscript image tag for fallback tracking
+    const noscriptElement = document.createElement('noscript');
+    const imgElement = document.createElement('img');
+    imgElement.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=${event_type};ord=1;num=1?`;
+    imgElement.width = "1";
+    imgElement.height = "1";
+    imgElement.alt = "";
+    noscriptElement.appendChild(imgElement);
+    document.body.appendChild(noscriptElement);
+	
+	
+	
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
