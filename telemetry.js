@@ -1924,12 +1924,12 @@ class IdentificationConfiguration {
 						if (!event.target.matches(this.configuration.address_selectors[i])) {
 							continue; // Ignore if not matching selector
 						}
-					}
 
 					let fieldValue = event.target.value;
 
-					this.fireIdentificationEvent(fieldValue, "address");
-					return;
+						this.fireIdentificationEvent(fieldValue, "address");
+						return;
+					}
 				}
 			},
 			true
