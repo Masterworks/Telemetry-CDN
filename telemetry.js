@@ -1888,7 +1888,7 @@ class IdentificationConfiguration {
 						// clean up zip code to only include digits and dashes
 						fieldValue = fieldValue.replace(/[^0-9\-]/g, "");
 
-						this.fireIdentificationEvent(fieldValue, "zip");
+						this.fireIdentificationEvent(fieldValue, "postalCode");
 						return;
 					}
 				}
@@ -1901,7 +1901,7 @@ class IdentificationConfiguration {
 
 						let fieldValue = event.target.value;
 
-						this.fireIdentificationEvent(fieldValue, "first_name");
+						this.fireIdentificationEvent(fieldValue, "firstName");
 						return;
 					}
 				}
@@ -1914,7 +1914,7 @@ class IdentificationConfiguration {
 
 						let fieldValue = event.target.value;
 
-						this.fireIdentificationEvent(fieldValue, "last_name");
+						this.fireIdentificationEvent(fieldValue, "lastName");
 						return;
 					}
 				}
@@ -1927,7 +1927,7 @@ class IdentificationConfiguration {
 
 						let fieldValue = event.target.value;
 
-						this.fireIdentificationEvent(fieldValue, "address");
+						this.fireIdentificationEvent(fieldValue, "street");
 						return;
 					}
 				}
@@ -2001,7 +2001,7 @@ class IdentificationConfiguration {
 			userID = "";
 		}
 
-		if (fieldType === "zip" || fieldType === "city" || fieldType === "state" || fieldType === "address") {
+		if (fieldType === "zip" || fieldType === "city" || fieldType === "state" || fieldType === "street" || fieldType === "postalCode") {
 			if (!currentTraits.address) {
 				currentTraits.address = {};
 			}
