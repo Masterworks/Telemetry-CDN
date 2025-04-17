@@ -1925,7 +1925,7 @@ class IdentificationConfiguration {
 							continue; // Ignore if not matching selector
 						}
 
-					let fieldValue = event.target.value;
+						let fieldValue = event.target.value;
 
 						this.fireIdentificationEvent(fieldValue, "address");
 						return;
@@ -1971,7 +1971,7 @@ class IdentificationConfiguration {
 			return;
 		}
 
-		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_]/g, "");
+		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_ ]/g, "");
 
 		const currentTraits = rudderanalytics.getUserTraits() || {};
 		let userID = rudderanalytics.getUserId();
