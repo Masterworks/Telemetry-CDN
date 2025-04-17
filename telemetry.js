@@ -1892,6 +1892,45 @@ class IdentificationConfiguration {
 						return;
 					}
 				}
+
+				if (this.configuration.first_name_selectors && this.configuration.first_name_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.first_name_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.first_name_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+
+						let fieldValue = event.target.value;
+
+						this.fireIdentificationEvent(fieldValue, "first_name");
+						return;
+					}
+				}
+
+				if (this.configuration.last_name_selectors && this.configuration.last_name_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.last_name_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.last_name_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+					}
+
+					let fieldValue = event.target.value;
+
+					this.fireIdentificationEvent(fieldValue, "last_name");
+					return;
+				}
+
+				if (this.configuration.address_selectors && this.configuration.address_selectors.length > 0) {
+					for (let i = 0; i < this.configuration.address_selectors.length; i++) {
+						if (!event.target.matches(this.configuration.address_selectors[i])) {
+							continue; // Ignore if not matching selector
+						}
+					}
+
+					let fieldValue = event.target.value;
+
+					this.fireIdentificationEvent(fieldValue, "address");
+					return;
+				}
 			},
 			true
 		);
@@ -1962,7 +2001,7 @@ class IdentificationConfiguration {
 			userID = "";
 		}
 
-		if (fieldType === "zip" || fieldType === "city" || fieldType === "state") {
+		if (fieldType === "zip" || fieldType === "city" || fieldType === "state" || fieldType === "address") {
 			if (!currentTraits.address) {
 				currentTraits.address = {};
 			}
