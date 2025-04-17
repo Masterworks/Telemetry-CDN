@@ -1911,12 +1911,12 @@ class IdentificationConfiguration {
 						if (!event.target.matches(this.configuration.last_name_selectors[i])) {
 							continue; // Ignore if not matching selector
 						}
+
+						let fieldValue = event.target.value;
+
+						this.fireIdentificationEvent(fieldValue, "last_name");
+						return;
 					}
-
-					let fieldValue = event.target.value;
-
-					this.fireIdentificationEvent(fieldValue, "last_name");
-					return;
 				}
 
 				if (this.configuration.address_selectors && this.configuration.address_selectors.length > 0) {
