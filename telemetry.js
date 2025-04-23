@@ -2202,14 +2202,14 @@ async function getGAEnhancedUserData() {
 			if (!use_google_ads_enhanced_user_data.address) {
 				use_google_ads_enhanced_user_data.address = {};
 			}
-			use_google_ads_enhanced_user_data.address.firstName = currentTraits.firstName;
+			use_google_ads_enhanced_user_data.address.first_name = currentTraits.firstName;
 		}
 
 		if (currentTraits.lastName) {
 			if (!use_google_ads_enhanced_user_data.address) {
 				use_google_ads_enhanced_user_data.address = {};
 			}
-			use_google_ads_enhanced_user_data.address.lastName = currentTraits.lastName;
+			use_google_ads_enhanced_user_data.address.last_name = currentTraits.lastName;
 		}
 
 		if (currentTraits.address && currentTraits.address.city) {
