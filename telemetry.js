@@ -2197,6 +2197,20 @@ async function getGAEnhancedUserData() {
 		if (currentTraits.zip) {
 			use_google_ads_enhanced_user_data.zip = currentTraits.zip;
 		}
+		
+		if (currentTraits.firstName) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.firstName = currentTraits.firstName;
+		}
+
+		if (currentTraits.lastName) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.lastName = currentTraits.lastName;
+		}
 
 		if (currentTraits.address && currentTraits.address.city) {
 			if (!use_google_ads_enhanced_user_data.address) {
@@ -2217,6 +2231,13 @@ async function getGAEnhancedUserData() {
 				use_google_ads_enhanced_user_data.address = {};
 			}
 			use_google_ads_enhanced_user_data.address.postal_code = currentTraits.address.postalCode;
+		}
+
+		if (currentTraits.address && currentTraits.address.street) {
+			if (!use_google_ads_enhanced_user_data.address) {
+				use_google_ads_enhanced_user_data.address = {};
+			}
+			use_google_ads_enhanced_user_data.address.street = currentTraits.address.street;
 		}
 
 		return use_google_ads_enhanced_user_data;
