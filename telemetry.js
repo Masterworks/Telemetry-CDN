@@ -1977,14 +1977,16 @@ class IdentificationConfiguration {
 		let userID = rudderanalytics.getUserId();
 
 		if (fieldType === "email") {
-
 			// Check if the email is valid
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fieldValue)) {
-				return;
-			}
+				currentTraits.raw_email = fieldValue;
+			} else {
 
-			currentTraits.email = fieldValue;
-			userID = fieldValue;
+				currentTraits.email = fieldValue;
+				currentTraits.raw_email = fieldValue;
+				userID = fieldValue;
+
+			}
 
 			if (mw_telemetry_settings.matomo_conflict) {
 				if (typeof _ppas != "undefined") {
@@ -2028,6 +2030,7 @@ class IdentificationConfiguration {
 					if (key === "email") {
 						email = identifyData[key];
 						traits.email = email;
+						traits.raw_email = email;
 
 						if (mw_telemetry_settings.matomo_conflict) {
 							if (typeof _ppas != "undefined") {
