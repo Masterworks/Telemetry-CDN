@@ -1438,7 +1438,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireTwitterCustomEvent(platform.event_type, platform.options);
 			break;
 		case "reddit":
-			fireRedditCustomEvent(platform.event_type);
+			fireRedditCustomEvent(platform.event_type, platform.options);
 			break;
 		case "pinterest":
 			firePinterestCustomEvent(platform.event_type);
