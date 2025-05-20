@@ -1161,12 +1161,21 @@ function triggerRedditEcommerceEvent(ecommerce_data, options = {}, event_type = 
 		throw new MasterworksTelemetryError("rdt is undefined").reportError();
 	}
 
-	rdt("track", event_type, {
+	const redditOptions = {
 		itemCount: ecommerce_data.items.length,
 		value: ecommerce_data.total_transaction_amount,
 		currency: "USD",
 		conversionId: ecommerce_data.transaction_id,
-	});
+	}
+
+	if (options.custom_data) {
+		redditOptions = {
+			...redditOptions,
+			...options.custom_data,
+		}
+	}
+
+	rdt("track", event_type, redditOptions);
 }
 
 // ** Optimonk ** //
