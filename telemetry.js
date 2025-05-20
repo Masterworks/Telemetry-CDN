@@ -1651,7 +1651,7 @@ function fireRedditCustomEvent(event_type, options = {}) {
 		throw new MasterworksTelemetryError("rdt is undefined").reportError();
 	}
 
-	const redditOptions = {}
+	let redditOptions = {}
 
 	if (options.custom_data) {
 		redditOptions = {
