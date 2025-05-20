@@ -1637,12 +1637,21 @@ function fireTwitterCustomEvent(event_type, options = {}) {
 	}
 }
 
-function fireRedditCustomEvent(event_type) {
+function fireRedditCustomEvent(event_type, options = {}) {
 	if (typeof rdt === "undefined") {
 		throw new MasterworksTelemetryError("rdt is undefined").reportError();
 	}
 
-	rdt("track", event_type);
+	const redditOptions = {}
+
+	if (options.custom_data) {
+		redditOptions = {
+			...redditOptions,
+			...options.custom_data,
+		}
+	}
+
+	rdt("track", event_type, redditOptions);
 }
 
 function fireTradedeskCustomEvent(event_type, event_name, options = {}) {
