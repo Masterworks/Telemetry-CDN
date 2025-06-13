@@ -1997,14 +1997,12 @@ class IdentificationConfiguration {
 		if (fieldType === "email") {
 			// Check if the email is valid
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fieldValue)) {
-				currentTraits.raw_email = fieldValue;
-			} else {
+				return
+			} 
 
-				currentTraits.email = fieldValue;
-				currentTraits.raw_email = fieldValue;
-				userID = fieldValue;
+			currentTraits.email = fieldValue;
+			userID = fieldValue;
 
-			}
 
 			if (mw_telemetry_settings.matomo_conflict) {
 				if (typeof _ppas != "undefined") {
