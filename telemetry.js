@@ -146,6 +146,14 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["text"]);
 		mw_trigger_javascript_message_contains_text(trigger.text, callback);
 	},
+	referrer_url_matches_regex: (trigger, callback) => {
+		validateTriggerFields(trigger, ["regex"]);
+		mw_trigger_referrer_url_matches_regex(trigger.regex, callback);
+	},
+	referrer_url_not_matches_regex: (trigger, callback) => {
+		validateTriggerFields(trigger, ["regex"]);
+		mw_trigger_referrer_url_not_matches_regex(trigger.regex, callback);
+	},
 	page_view: (trigger, callback) => {
 		callback();
 	},
@@ -329,6 +337,19 @@ function mw_trigger_javascript_message_contains_text(text, callback) {
 		}
 	});
 }
+
+function mw_trigger_referrer_url_matches_regex(regex, callback) {
+	if (window.location.referrer.match(regex)) {
+		callback();
+	}
+}
+
+function mw_trigger_referrer_url_not_matches_regex(regex, callback) {
+	if (!window.location.referrer.match(regex)) {
+		callback();
+	}
+}
+
 
 /* ---------------------------- Helper Functions ---------------------------- */
 function matches_current_url(url) {
