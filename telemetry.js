@@ -339,13 +339,13 @@ function mw_trigger_javascript_message_contains_text(text, callback) {
 }
 
 function mw_trigger_referrer_url_matches_regex(regex, callback) {
-	if (window.location.referrer.match(regex)) {
+	if (document.referrer.match(regex)) {
 		callback();
 	}
 }
 
 function mw_trigger_referrer_url_not_matches_regex(regex, callback) {
-	if (!window.location.referrer.match(regex)) {
+	if (!document.referrer.match(regex)) {
 		callback();
 	}
 }
