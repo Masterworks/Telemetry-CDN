@@ -339,8 +339,6 @@ function mw_trigger_javascript_message_contains_text(text, callback) {
 }
 
 function mw_trigger_referrer_url_matches_regex(regex, callback) {
-	console.log(document.referrer);
-	console.log(regex)
 	if (document.referrer.match(regex)) {
 		callback();
 	}
