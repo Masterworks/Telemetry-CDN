@@ -255,9 +255,8 @@ function mw_trigger_detect_dataLayer_event(event_name, callback) {
 }
 
 function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
+	const intervalDataLayerProcessID = Math.random().toString(36).substring(2, 15);
 	setInterval(function () {
-
-		const intervalDataLayerProcessID = Math.random().toString(36).substring(2, 15);
 
 		for (let i = 0; i < dataLayer.length; i++) {
 			if (dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`]) {
