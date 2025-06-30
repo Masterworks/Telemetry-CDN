@@ -256,12 +256,15 @@ function mw_trigger_detect_dataLayer_event(event_name, callback) {
 
 function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
 	setInterval(function () {
+
+		const intervalDataLayerProcessID = Math.random().toString(36).substring(2, 15);
+
 		for (let i = 0; i < dataLayer.length; i++) {
-			if (dataLayer[i].masterworks_processed) {
+			if (dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`]) {
 				continue;
 			}
 
-			dataLayer[i].masterworks_processed = true;
+			dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`] = true;
 
 			if (dataLayer[i].event === event_name) {
 				callback();
@@ -727,18 +730,42 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 						});
 					}
 				} else {
-					fbq("track", event_type, {
-						value: ecommerce_data.total_transaction_amount,
-						currency: "USD",
-						content_ids: ecommerce_data.items.map((item) => item.sku),
-						content_name: ecommerce_data.items.map((item) => item.name).join(","),
-					});
+
+					const facebookPixelIds = fbq.getState().pixels.map(pixel => pixel.id)
+
+					for (let i = 0; i < facebookPixelIds.length; i++) {
+						fbq("trackSingle", facebookPixelIds[i].toString(), event_type, {
+							value: ecommerce_data.total_transaction_amount,
+							currency: "USD",
+							content_ids: ecommerce_data.items.map((item) => item.sku),
+							content_name: ecommerce_data.items.map((item) => item.name).join(","),
+						});
+					}
 				}
 			}
 
 			ecommerce_data.items.forEach((item) => {
 				if (item.category === "sustainer") {
-					fbq("trackCustom", "SustainerDonation", { value: item.price, currency: "USD", content_ids: item.sku, content_name: item.name });
+					if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
+						for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
+							fbq("trackSingleCustom", options.facebook_pixel_ids[i].toString(), "SustainerDonation", {
+								value: item.price,
+								currency: "USD",
+								content_ids: item.sku,
+								content_name: item.name,
+							});
+						}
+					} else {
+						const facebookPixelIds = fbq.getState().pixels.map(pixel => pixel.id)
+						for (let i = 0; i < facebookPixelIds.length; i++) {
+							fbq("trackSingleCustom", facebookPixelIds[i].toString(), "SustainerDonation", {
+								value: item.price,
+								currency: "USD",
+								content_ids: item.sku,
+								content_name: item.name,
+							});
+						}
+					}
 				}
 			});
 		}
@@ -1511,10 +1538,19 @@ function fireFacebookCustomEvent(event_type, event_name, options = {}, metadata 
 		if (typeof fbq !== "undefined") {
 			clearInterval(interval);
 
-			if (options.facebook_track_custom) {
-				fbq("trackCustom", event_type, { content_name: event_name, ...metadata });
-			} else {
-				fbq("track", event_type, { content_name: event_name, ...metadata });
+			let facebookPixelIds = fbq.getState().pixels.map(pixel => pixel.id)
+			if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
+				facebookPixelIds = options.facebook_pixel_ids
+			}
+
+			for (let i = 0; i < facebookPixelIds.length; i++) {
+
+				if (options.facebook_track_custom) {
+					fbq("trackSingleCustom", facebookPixelIds[i].toString(), event_type, { content_name: event_name, ...metadata });
+				} else {
+					fbq("trackSingle", facebookPixelIds[i].toString(), event_type, { content_name: event_name, ...metadata });
+				}
+
 			}
 		}
 	}, 250);
