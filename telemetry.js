@@ -2,6 +2,11 @@
 /*                                   Errors                                   */
 /* -------------------------------------------------------------------------- */
 
+// Handle if mw_telemetry_settings is undefined
+if (typeof mw_telemetry_settings === "undefined") {
+	mw_telemetry_settings = {};
+}
+
 class MasterworksTelemetryError extends Error {
 	constructor(message, data, originalStack = undefined) {
 		super(message);
