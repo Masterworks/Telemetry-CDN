@@ -2,16 +2,7 @@
 /*                                   Errors                                   */
 /* -------------------------------------------------------------------------- */
 
-// Handle if mw_telemetry_settings is undefined
-// Set interval to check if mw_telemetry_settings is defined
-const interval = setInterval(() => {
-	if (typeof mw_telemetry_settings === "undefined") {
-		console.log("mw_telemetry_settings is undefined");
-	} else {
-		console.log("mw_telemetry_settings is defined");
-		clearInterval(interval);
-	}
-}, 20);
+
 
 class MasterworksTelemetryError extends Error {
 	constructor(message, data, originalStack = undefined) {
