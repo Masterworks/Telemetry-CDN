@@ -649,6 +649,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "doubleclick":
 					triggerDoubleClickEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "moment_science":
+					triggerMomentScienceEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1342,6 +1345,28 @@ function triggerDoubleClickEcommerceEvent(ecommerce_data, options = {}, event_ty
         }
     });
 
+}
+
+// ** MoSci ** //
+function triggerMomentScienceEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	
+	if (!mw_telemetry_settings.moment_science_pixel_id) {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.moment_science_pixel_id is undefined").reportError();
+		return;
+	}
+
+	(async () => {
+		const eventName = event_type;
+		const sale_amount = ecommerce_data.total_transaction_amount;
+		const mosciClickId = getCookie('mosci_click_id');
+		await trackMoSciEvent(mosciClickId, eventName, sale_amount)   
+			.then(() => console.log('Tracking successful'))
+			.catch(error => console.error('Tracking failed:', error));        
+		const adpxClickId = getCookie('adpx_click_id');
+		await trackEvent(adpxClickId, sale_amount)   
+			.then(() => console.log('Tracking successful'))
+			.catch(error => console.error('Tracking failed:', error));
+	})();
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
