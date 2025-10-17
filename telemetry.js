@@ -564,7 +564,7 @@ function triggerMWEcommerceEvent(configuration) {
 function isTransactionEventADuplicate(ecommerce_data) {
 	const transactionCookie = getCookie("mw_transaction");
 	const generatedTransactionCookieValue = generateTransactionCookieValue(ecommerce_data);
-	if (transactionCookie.includes(generatedTransactionCookieValue)) {
+	if (transactionCookie && transactionCookie.includes(generatedTransactionCookieValue)) {
 		return true;
 	}
 	return false;
