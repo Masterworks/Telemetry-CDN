@@ -1529,6 +1529,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "doubleclick":
 			fireDoubleClickCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
+		case "mntn":
+			fireMNTNCustomEvent(platform.event_type, configuration.event_name, platform.options);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
 	}
@@ -1860,6 +1863,82 @@ function fireDoubleClickCustomEvent(event_type, event_name, options = {}) {
 	
 	
 	
+}
+
+function fireMNTNCustomEvent(event_type, event_name, options = {}) {
+	if (typeof mw_telemetry_settings.mntn_pixel_id === "undefined") {
+		throw new MasterworksTelemetryError("mntn_pixel_id is undefined", { event_type: event_type, event_name: event_name, options: options }).reportError();
+	}
+
+	(function () {
+		var x = null,
+			p,
+			q,
+			m,
+			o = mw_telemetry_settings.mntn_pixel_id.toString(),
+			c = "",
+			k = "",
+			g = "",
+			j = "",
+			u = "",
+			shadditional = "";
+		try {
+			p = top.document.referer !== "" ? encodeURIComponent(top.document.referrer.substring(0, 512)) : "";
+		} catch (n) {
+			p = document.referrer !== null ? document.referrer.toString().substring(0, 512) : "";
+		}
+		try {
+			q =
+				window && window.top && document.location && window.top.location === document.location
+					? document.location
+					: window && window.top && window.top.location && "" !== window.top.location
+					? window.top.location
+					: document.location;
+		} catch (b) {
+			q = document.location;
+		}
+		try {
+			m = parent.location.href !== "" ? encodeURIComponent(parent.location.href.toString().substring(0, 512)) : "";
+		} catch (z) {
+			try {
+				m = q !== null ? encodeURIComponent(q.toString().substring(0, 512)) : "";
+			} catch (h) {
+				m = "";
+			}
+		}
+		var A,
+			y = document.createElement("script"),
+			w = null,
+			v = document.getElementsByTagName("script"),
+			t = Number(v.length) - 1,
+			r = document.getElementsByTagName("script")[t];
+		if (typeof A === "undefined") {
+			A = Math.floor(Math.random() * 100000000000000000);
+		}
+		w =
+			"dx.mountain.com/spx?conv=1&shaid=" +
+			o +
+			"&tdr=" +
+			p +
+			"&plh=" +
+			m +
+			"&cb=" +
+			A +
+			"&shocur=" +
+			c +
+			"&shopid=" +
+			k +
+			"&shoq=" +
+			g +
+			"&shoup=" +
+			j +
+			"&shpil=" +
+			u +
+			shadditional;
+		y.type = "text/javascript";
+		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
+		r.parentNode.insertBefore(y, r);
+	})();
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
