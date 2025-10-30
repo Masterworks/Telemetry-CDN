@@ -1875,8 +1875,6 @@ function fireMNTNCustomEvent(event_type, event_name, options = {}) {
 			p,
 			q,
 			m,
-			l,
-			i,
 			o = mw_telemetry_settings.mntn_pixel_id.toString(),
 			c = "",
 			k = "",
@@ -1926,10 +1924,6 @@ function fireMNTNCustomEvent(event_type, event_name, options = {}) {
 			m +
 			"&cb=" +
 			A +
-			"&shoid=" +
-			l +
-			"&shoamt=" +
-			i +
 			"&shocur=" +
 			c +
 			"&shopid=" +
