@@ -1532,6 +1532,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "mntn":
 			fireMNTNCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
+		case "intercom":
+			fireIntercomCustomEvent(platform.event_type);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
 	}
@@ -1939,6 +1942,19 @@ function fireMNTNCustomEvent(event_type, event_name, options = {}) {
 		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
 		r.parentNode.insertBefore(y, r);
 	})();
+}
+
+function fireIntercomCustomEvent(event_type, event_name, options = {}) {
+	if (typeof window.Intercom === "undefined") {
+		throw new MasterworksTelemetryError("window.Intercom is undefined").reportError();
+	}
+
+	var metadata = {
+		...options.metadata,
+		event_name: event_name,
+	}
+
+	window.Intercom("trackEvent", event_type, metadata);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
