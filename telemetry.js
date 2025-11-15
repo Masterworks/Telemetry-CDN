@@ -1105,6 +1105,11 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 		for (let i = 0; i < ecommerce_data.items.length; i++) {
 			if (ecommerce_data.items[i].category === "sustainer") {
 				for (let j = 0; j < options.tradedesk_sustainer_tracking_tag_ids.length; j++) {
+					
+					// random 10 character string to append to the order id
+					const randomString = Math.random().toString(36).substring(2, 15);
+					const orderId = ecommerce_data.transaction_id + "-" + randomString;
+
 					var img = document.createElement("img");
 					img.setAttribute("height", "1");
 					img.setAttribute("width", "1");
@@ -1114,7 +1119,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 					img.setAttribute(
 						"src",
 						`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_sustainer_tracking_tag_ids[j]}&fmt=3&orderid=` +
-							ecommerce_data.transaction_id +
+							orderId +
 							"&td1=sustainer" +
 							"&v=" +
 							ecommerce_data.items[i].price +
@@ -1532,6 +1537,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "mntn":
 			fireMNTNCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
+		case "intercom":
+			fireIntercomCustomEvent(platform.event_type);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
 	}
@@ -1939,6 +1947,19 @@ function fireMNTNCustomEvent(event_type, event_name, options = {}) {
 		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
 		r.parentNode.insertBefore(y, r);
 	})();
+}
+
+function fireIntercomCustomEvent(event_type, event_name, options = {}) {
+	if (typeof window.Intercom === "undefined") {
+		throw new MasterworksTelemetryError("window.Intercom is undefined").reportError();
+	}
+
+	var metadata = {
+		...options.metadata,
+		event_name: event_name,
+	}
+
+	window.Intercom("trackEvent", event_type, metadata);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
