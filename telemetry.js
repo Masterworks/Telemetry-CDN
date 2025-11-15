@@ -1105,6 +1105,11 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 		for (let i = 0; i < ecommerce_data.items.length; i++) {
 			if (ecommerce_data.items[i].category === "sustainer") {
 				for (let j = 0; j < options.tradedesk_sustainer_tracking_tag_ids.length; j++) {
+					
+					// random 10 character string to append to the order id
+					const randomString = Math.random().toString(36).substring(2, 15);
+					const orderId = ecommerce_data.transaction_id + "-" + randomString;
+
 					var img = document.createElement("img");
 					img.setAttribute("height", "1");
 					img.setAttribute("width", "1");
@@ -1114,7 +1119,7 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 					img.setAttribute(
 						"src",
 						`https://insight.adsrvr.org/track/pxl/?adv=${mw_telemetry_settings.tradedesk_advertiser_id}&ct=${options.tradedesk_sustainer_tracking_tag_ids[j]}&fmt=3&orderid=` +
-							ecommerce_data.transaction_id +
+							orderId +
 							"&td1=sustainer" +
 							"&v=" +
 							ecommerce_data.items[i].price +
