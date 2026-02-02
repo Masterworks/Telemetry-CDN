@@ -1487,7 +1487,7 @@ function triggerMWCustomEvent(configuration) {
 function handlePlatformEvent(platform, configuration) {
 	switch (platform.name) {
 		case "rudderstack":
-			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, configuration.metadata);
+			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, platform.options, configuration.metadata);
 			break;
 		case "piwik":
 			firePiwikCustomEvent(platform.event_type, configuration.event_name, platform.options);
@@ -1545,13 +1545,19 @@ function handlePlatformEvent(platform, configuration) {
 	}
 }
 
-function fireRudderstackCustomEvent(event_type, event_name, metadata = {}) {
+function fireRudderstackCustomEvent(event_type, event_name, options = {}, metadata = {}) {
 	if (typeof rudderanalytics === "undefined") {
 		throw new MasterworksTelemetryError("rudderanalytics is undefined").reportError();
 	}
 
-	metadata.event_name = event_name;
-	rudderanalytics.track(event_type, metadata);
+	// Merge metadata: platform-specific metadata takes precedence over configuration metadata
+	const mergedMetadata = {
+		...metadata,
+		...(options.metadata || {}),
+	};
+	
+	mergedMetadata.event_name = event_name;
+	rudderanalytics.track(event_type, mergedMetadata);
 }
 
 function firePiwikCustomEvent(event_type, event_name, options = {}) {
