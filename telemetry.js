@@ -994,6 +994,8 @@ function triggerMNTNEcommerceEvent(ecommerce_data, options = {}, event_type = "P
 			j +
 			"&shpil=" +
 			u +
+			"&conversion_type=" +
+			event_type +
 			shadditional;
 		y.type = "text/javascript";
 		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
@@ -1948,6 +1950,8 @@ function fireMNTNCustomEvent(event_type, event_name, options = {}) {
 			j +
 			"&shpil=" +
 			u +
+			"&conversion_type=" +
+			event_type +
 			shadditional;
 		y.type = "text/javascript";
 		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
