@@ -889,7 +889,7 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 }
 
 // ** TikTok ** //
-function triggerTikTokEcommerceEvent(ecommerce_data, options = {}, event_type = "CompletePayment") {
+function triggerTikTokEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
 	if (typeof ttq === "undefined") {
 		throw new MasterworksTelemetryError("ttq is undefined", {
 			ecommerce_data: ecommerce_data,
