@@ -587,7 +587,7 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 		try {
 			switch (platform.name) {
 				case "rudderstack":
-					triggerRudderstackEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					triggerRudderstackEcommerceEvent(ecommerce_data, platform.options, platform.event_type, configuration.configuration_name);
 					break;
 				case "piwik":
 					triggerPiwikEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
@@ -666,7 +666,7 @@ function generateTransactionID() {
 }
 
 // ** Rudderstack ** //
-function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_type = "Order Completed") {
+function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_type = "Order Completed", configuration_name) {
 	if (typeof rudderanalytics === "undefined") {
 		throw new MasterworksTelemetryError("rudderanalytics is not defined", {
 			ecommerce_data: ecommerce_data,
@@ -679,6 +679,7 @@ function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_ty
 		currency: "USD",
 		revenue: ecommerce_data.total_transaction_amount,
 		products: ecommerce_data.items,
+		configuration_name: configuration_name,
 	});
 }
 
@@ -1136,15 +1137,18 @@ function triggerTradeDeskEcommerceEvent(ecommerce_data, options = {}, event_type
 }
 
 // ** LinkedIn ** //
-function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type = "conversion") {
+function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, conversion_type = "purchase") {
 	if (typeof options.linkedin_conversion_id === "undefined") {
-		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined", { ecommerce_data: ecommerce_data, conversion_type: conversion_type, options: options }).reportError();
 	}
 
 	const interval = setInterval(() => {
 		if (typeof window.lintrk !== "undefined") {
 			clearInterval(interval);
-			window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+			window.lintrk("track", {
+				conversion_id: options.linkedin_conversion_id,
+				conversion_type: conversion_type,
+			});
 		}
 	}, 250);
 
@@ -1153,7 +1157,7 @@ function triggerLinkedInEcommerceEvent(ecommerce_data, options = {}, event_type 
 			clearInterval(interval);
 			throw new MasterworksTelemetryError("window.lintrk is still undefined after 30 seconds", {
 				ecommerce_data: ecommerce_data,
-				event_type: event_type,
+				conversion_type: conversion_type,
 				options: options,
 			}).reportError();
 		}
@@ -1528,7 +1532,7 @@ function handlePlatformEvent(platform, configuration) {
 			fireTradedeskCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
 		case "linkedin":
-			fireLinkedInCustomEvent(platform.options);
+			fireLinkedInCustomEvent(platform.options, platform.event_type);
 			break;
 		case "magellan":
 			fireMagellanCustomEvent(platform.event_type, configuration.event_name, platform.options);
@@ -1797,7 +1801,7 @@ function firePinterestCustomEvent(event_type) {
 	pintrk("track", event_type);
 }
 
-function fireLinkedInCustomEvent(options = {}) {
+function fireLinkedInCustomEvent(options = {}, event_type) {
 	if (typeof window.lintrk === "undefined") {
 		throw new MasterworksTelemetryError("window.lintrk is undefined").reportError();
 	}
@@ -1806,10 +1810,17 @@ function fireLinkedInCustomEvent(options = {}) {
 		throw new MasterworksTelemetryError("options.linkedin_conversion_id is undefined").reportError();
 	}
 
+	if (!event_type) {
+		throw new MasterworksTelemetryError("LinkedIn conversion_type (event_type) is required", { options: options }).reportError();
+	}
+
 	const interval = setInterval(() => {
 		if (typeof window.lintrk !== "undefined") {
 			clearInterval(interval);
-			window.lintrk("track", { conversion_id: options.linkedin_conversion_id });
+			window.lintrk("track", {
+				conversion_id: options.linkedin_conversion_id,
+				conversion_type: event_type,
+			});
 		}
 	}, 250);
 
