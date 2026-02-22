@@ -1801,7 +1801,7 @@ function firePinterestCustomEvent(event_type) {
 	pintrk("track", event_type);
 }
 
-function fireLinkedInCustomEvent(options = {}, event_type) {
+function fireLinkedInCustomEvent(options = {}, event_type = "lead") {
 	if (typeof window.lintrk === "undefined") {
 		throw new MasterworksTelemetryError("window.lintrk is undefined").reportError();
 	}
