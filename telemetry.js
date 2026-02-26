@@ -1993,6 +1993,131 @@ function writeEventToDataLayer(event_name, metadata = {}) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                              Engaged Session                               */
+/* -------------------------------------------------------------------------- */
+
+if (
+    mw_telemetry_settings.engaged_session_configuration &&
+    mw_telemetry_settings.engaged_session_configuration.enabled &&
+    !mw_telemetry_settings.events_disabled
+) {
+    (function () {
+        const config = mw_telemetry_settings.engaged_session_configuration;
+
+        // Validate platforms
+        if (!Array.isArray(config.platforms) || config.platforms.length === 0) {
+            throw new MasterworksTelemetryError(
+                "Invalid engaged_session_configuration.platforms",
+                { configuration: config }
+            ).reportError();
+        }
+
+        // Session dedup — exit before any listeners or cookies are touched
+        if (getCookie("mw_eng_fired")) return;
+
+        // URL exclusion
+        const urlExcludes = config.url_excludes || [];
+        if (
+            urlExcludes.length > 0 &&
+            urlExcludes.some(function (url) {
+                return window.location.href.indexOf(url) !== -1;
+            })
+        ) {
+            return;
+        }
+
+        // Thresholds with defaults
+        const thresholds = config.thresholds || {};
+        const pageViewCount = thresholds.page_view_count || 2;
+        const sessionTimerSeconds = thresholds.session_timer_seconds || 45;
+        const scrollDepthPercent = thresholds.scroll_depth_percent || 50;
+        const minScrollPixels = thresholds.min_scroll_pixels || 1000;
+
+        let eventFired = false;
+
+        function fireEngagedSessionEvent(triggerSource) {
+            if (eventFired) return;
+            eventFired = true;
+
+            writeCookie("mw_eng_fired", "1", 30);
+
+            // Reuse existing custom event platform fan-out
+            triggerMWCustomEvent({
+                event_name: "Engaged Session",
+                metadata: { trigger_source: triggerSource },
+                platforms: config.platforms,
+            });
+        }
+
+        /* ----------------------- Page View Count ----------------------- */
+        if (pageViewCount) {
+            let currentPvCount =
+                parseInt(getCookie("mw_pv_cnt") || "0", 10) + 1;
+            writeCookie("mw_pv_cnt", currentPvCount.toString(), 30);
+
+            if (currentPvCount >= pageViewCount) {
+                fireEngagedSessionEvent("page_view_count");
+            }
+        }
+
+        /* -------------------- Session Timer (visibility-aware) --------- */
+        if (sessionTimerSeconds && !eventFired) {
+            let elapsedSeconds = 0;
+            const timerInterval = setInterval(function () {
+                if (eventFired) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                if (document.visibilityState === "visible") {
+                    elapsedSeconds++;
+                }
+                if (elapsedSeconds >= sessionTimerSeconds) {
+                    clearInterval(timerInterval);
+                    fireEngagedSessionEvent("session_timer");
+                }
+            }, 1000);
+        }
+
+        /* ----------------------- Scroll Depth -------------------------- */
+        if (scrollDepthPercent && !eventFired) {
+            const handleScroll = function () {
+                if (eventFired) {
+                    window.removeEventListener("scroll", handleScroll);
+                    return;
+                }
+
+                const scrollHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight
+                );
+                const clientHeight =
+                    document.documentElement.clientHeight || window.innerHeight;
+                const scrollTop =
+                    window.pageYOffset ||
+                    document.documentElement.scrollTop ||
+                    0;
+
+                const maxScroll = scrollHeight - clientHeight;
+                const currentPercent =
+                    maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0;
+
+                if (
+                    currentPercent >= scrollDepthPercent &&
+                    scrollTop >= minScrollPixels
+                ) {
+                    fireEngagedSessionEvent("scroll_depth");
+                    window.removeEventListener("scroll", handleScroll);
+                }
+            };
+
+            handleScroll();
+            window.addEventListener("scroll", handleScroll, { passive: true });
+        }
+    })();
+}
+
+
+/* -------------------------------------------------------------------------- */
 /*                             User Identification                            */
 /* -------------------------------------------------------------------------- */
 
