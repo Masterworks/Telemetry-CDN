@@ -652,6 +652,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "moment_science":
 					triggerMomentScienceEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "podscribe":
+					triggerPodscribeEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1378,6 +1381,69 @@ function triggerMomentScienceEcommerceEvent(ecommerce_data, options = {}, event_
 			.then(() => console.log('Tracking successful'))
 			.catch(error => console.error('Tracking failed:', error));
 	})();
+}
+
+// ** Podscribe ** //
+function triggerPodscribeEcommerceEvent(ecommerce_data, options = {}, event_type = "purchase") {
+	if (typeof mw_telemetry_settings.podscribe_user_id === "undefined" || typeof mw_telemetry_settings.podscribe_advertiser === "undefined") {
+		throw new MasterworksTelemetryError("mw_telemetry_settings.podscribe_user_id and mw_telemetry_settings.podscribe_advertiser are required", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
+	}
+
+	const numItems = ecommerce_data.items.reduce((total, item) => total + (item.quantity || 1), 0);
+	const isSubscription = ecommerce_data.items.some((item) => item.category === "sustainer");
+
+	const purchasePayload = {
+		value: ecommerce_data.total_transaction_amount,
+		order_number: ecommerce_data.transaction_id,
+		num_items: numItems,
+		currency: "USD",
+		product: ecommerce_data.items.map((item) => (item.sku != null ? item.sku : item.name)).join(","),
+		is_subscription: isSubscription,
+	};
+
+	const run = function () {
+		if (typeof window.podscribe !== "function") {
+			return;
+		}
+		window.podscribe("init", {
+			user_id: mw_telemetry_settings.podscribe_user_id,
+			advertiser: mw_telemetry_settings.podscribe_advertiser,
+		});
+		window.podscribe(event_type, purchasePayload);
+	};
+
+	if (typeof window.podscribe === "function") {
+		run();
+		return;
+	}
+
+	window.__podscribeReadyCallbacks = window.__podscribeReadyCallbacks || [];
+	window.__podscribeReadyCallbacks.push(run);
+
+	if (document.getElementById("podscribe-capture")) {
+		return;
+	}
+
+	const e = document.createElement("script");
+	e.id = "podscribe-capture";
+	e.async = true;
+	e.src = "https://d34r8q7sht0t9k.cloudfront.net/tag.js";
+	const s = document.getElementsByTagName("script")[0];
+	s.parentNode.insertBefore(e, s);
+	e.addEventListener("load", function () {
+		const cbs = window.__podscribeReadyCallbacks || [];
+		window.__podscribeReadyCallbacks = [];
+		cbs.forEach(function (cb) {
+			try {
+				cb();
+			} catch (err) {
+				console.error(err);
+			}
+		});
+	});
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
