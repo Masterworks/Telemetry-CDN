@@ -1005,6 +1005,92 @@ function triggerMNTNEcommerceEvent(ecommerce_data, options = {}, event_type = "P
 		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
 		r.parentNode.insertBefore(y, r);
 	})();
+
+	// Fire a single parallel sustainer event with the sum total of sustainer item values
+	const sustainerItems = ecommerce_data.items.filter((item) => item.category === "sustainer");
+	if (sustainerItems.length > 0) {
+		const sustainerTotal = sustainerItems.reduce((sum, item) => sum + Number(item.price), 0);
+		fireMNTNSustainerEvent(sustainerTotal, ecommerce_data.transaction_id);
+	}
+}
+
+function fireMNTNSustainerEvent(sustainer_total, transaction_id) {
+	(function () {
+		var x = null,
+			p,
+			q,
+			m,
+			o = mw_telemetry_settings.mntn_pixel_id.toString(),
+			l = transaction_id + "-sustainer",
+			i = sustainer_total,
+			c = "",
+			k = "",
+			g = "",
+			j = "",
+			u = "",
+			shadditional = "";
+		try {
+			p = top.document.referer !== "" ? encodeURIComponent(top.document.referrer.substring(0, 512)) : "";
+		} catch (n) {
+			p = document.referrer !== null ? document.referrer.toString().substring(0, 512) : "";
+		}
+		try {
+			q =
+				window && window.top && document.location && window.top.location === document.location
+					? document.location
+					: window && window.top && window.top.location && "" !== window.top.location
+					? window.top.location
+					: document.location;
+		} catch (b) {
+			q = document.location;
+		}
+		try {
+			m = parent.location.href !== "" ? encodeURIComponent(parent.location.href.toString().substring(0, 512)) : "";
+		} catch (z) {
+			try {
+				m = q !== null ? encodeURIComponent(q.toString().substring(0, 512)) : "";
+			} catch (h) {
+				m = "";
+			}
+		}
+		var A,
+			y = document.createElement("script"),
+			w = null,
+			v = document.getElementsByTagName("script"),
+			t = Number(v.length) - 1,
+			r = document.getElementsByTagName("script")[t];
+		if (typeof A === "undefined") {
+			A = Math.floor(Math.random() * 100000000000000000);
+		}
+		w =
+			"dx.mountain.com/spx?conv=1&shaid=" +
+			o +
+			"&tdr=" +
+			p +
+			"&plh=" +
+			m +
+			"&cb=" +
+			A +
+			"&shoid=" +
+			l +
+			"&shoamt=" +
+			i +
+			"&shocur=" +
+			c +
+			"&shopid=" +
+			k +
+			"&shoq=" +
+			g +
+			"&shoup=" +
+			j +
+			"&shpil=" +
+			u +
+			"&conversion_type=SustainerDonation" +
+			shadditional;
+		y.type = "text/javascript";
+		y.src = ("https:" === document.location.protocol ? "https://" : "http://") + w;
+		r.parentNode.insertBefore(y, r);
+	})();
 }
 
 //  ** Pinterest ** //
