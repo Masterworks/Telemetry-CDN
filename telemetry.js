@@ -890,6 +890,37 @@ function triggerGoogleAdsEcommerceEvent(ecommerce_data, options = {}, event_type
 			transaction_id: ecommerce_data.transaction_id,
 		});
 	});
+
+	// Fire a single parallel sustainer event with the sum total of sustainer item values
+	if (options.google_ads_sustainer_send_to_ids && options.google_ads_sustainer_send_to_ids.length > 0) {
+		const sustainerItems = ecommerce_data.items.filter((item) => item.category === "sustainer");
+		if (sustainerItems.length > 0) {
+			const sustainerTotal = sustainerItems.reduce((sum, item) => sum + Number(item.price), 0);
+			const sustainerTransactionId = ecommerce_data.transaction_id + "-sustainer";
+
+			options.google_ads_sustainer_send_to_ids.forEach((google_ads_sustainer_send_to_id) => {
+				if (options.use_google_ads_enhanced_user_data) {
+					getGAEnhancedUserData().then((data) => {
+						gtag("event", event_type, {
+							send_to: google_ads_sustainer_send_to_id,
+							value: sustainerTotal,
+							currency: "USD",
+							transaction_id: sustainerTransactionId,
+							user_data: data,
+						});
+					});
+					return;
+				}
+
+				gtag("event", event_type, {
+					send_to: google_ads_sustainer_send_to_id,
+					value: sustainerTotal,
+					currency: "USD",
+					transaction_id: sustainerTransactionId,
+				});
+			});
+		}
+	}
 }
 
 // ** TikTok ** //
