@@ -243,11 +243,20 @@ function mw_trigger_element_contains_text(selector, text, callback) {
 }
 
 function mw_trigger_detect_dataLayer_event(event_name, callback) {
-	const originalPush = dataLayer.push.bind(dataLayer);
-	dataLayer.push = function (obj) {
-		originalPush(obj);
-		window.dispatchEvent(new CustomEvent("mw_dataLayer_detection", { detail: obj }));
-	};
+	// Wrap dataLayer.push exactly once per page, no matter how many dataLayer_event
+	// triggers are registered. Re-wrapping caused one dispatch per registered trigger,
+	// double-firing every dataLayer-triggered event on sites with 2+ such triggers.
+	if (!window.dataLayer.__mw_push_wrapped) {
+		const originalPush = dataLayer.push.bind(dataLayer);
+		dataLayer.push = function (obj) {
+			const result = originalPush(obj);
+			window.dispatchEvent(new CustomEvent("mw_dataLayer_detection", { detail: obj }));
+			return result;
+		};
+		// Non-enumerable flag on the array instance: invisible to GTM/client code that
+		// iterates or serializes dataLayer; a replaced dataLayer array gets wrapped fresh.
+		Object.defineProperty(window.dataLayer, "__mw_push_wrapped", { value: true });
+	}
 
 	window.addEventListener("mw_dataLayer_detection", function (e) {
 		if (e.detail.event === event_name) {
