@@ -120,9 +120,9 @@ const mw_trigger_types = {
 	// `arguments` objects (numeric-keyed: {"0":"event","1":"<event_name>","2":{...}}),
 	// e.g. sites with `function gtag(){dataLayer.push(arguments);}` calling
 	// gtag('event', 'purchase', {...}) directly, rather than a plain {event: "..."} literal.
-	datalayer_args_interval: (trigger, callback) => {
+	dataLayer_args_interval: (trigger, callback) => {
 		validateTriggerFields(trigger, ["event_name"]);
-		mw_trigger_detect_datalayer_args_interval(trigger.event_name, callback);
+		mw_trigger_detect_dataLayer_args_interval(trigger.event_name, callback);
 	},
 	parameter_equals: (trigger, callback) => {
 		validateTriggerFields(trigger, ["parameter_key", "parameter_value"]);
@@ -291,7 +291,7 @@ function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
 	}, 250);
 }
 
-function mw_trigger_detect_datalayer_args_interval(event_name, callback) {
+function mw_trigger_detect_dataLayer_args_interval(event_name, callback) {
 	// Same polling/mark-processed pattern as mw_trigger_detect_dataLayer_event_interval,
 	// but reads a gtag.js-style `arguments` object instead of a plain {event: "..."} literal:
 	// dataLayer.push(arguments) serializes as {"0": "event", "1": "<name>", "2": {...params}}.
