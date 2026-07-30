@@ -278,13 +278,18 @@ function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
 	setInterval(function () {
 
 		for (let i = 0; i < dataLayer.length; i++) {
-			if (dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`]) {
+			const entry = dataLayer[i];
+			if (entry == null) {
 				continue;
 			}
 
-			dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`] = true;
+			if (entry[`mw_processed_${intervalDataLayerProcessID}`]) {
+				continue;
+			}
 
-			if (dataLayer[i].event === event_name) {
+			entry[`mw_processed_${intervalDataLayerProcessID}`] = true;
+
+			if (entry.event === event_name) {
 				callback();
 			}
 		}
@@ -299,13 +304,18 @@ function mw_trigger_detect_dataLayer_args_interval(event_name, callback) {
 	setInterval(function () {
 
 		for (let i = 0; i < dataLayer.length; i++) {
-			if (dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`]) {
+			const entry = dataLayer[i];
+			if (entry == null) {
 				continue;
 			}
 
-			dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`] = true;
+			if (entry[`mw_processed_${intervalDataLayerProcessID}`]) {
+				continue;
+			}
 
-			if (dataLayer[i]["0"] === "event" && dataLayer[i]["1"] === event_name) {
+			entry[`mw_processed_${intervalDataLayerProcessID}`] = true;
+
+			if (entry["0"] === "event" && entry["1"] === event_name) {
 				callback();
 			}
 		}
