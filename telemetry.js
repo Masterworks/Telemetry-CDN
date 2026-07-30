@@ -116,6 +116,14 @@ const mw_trigger_types = {
 		validateTriggerFields(trigger, ["event_name"]);
 		mw_trigger_detect_dataLayer_event_interval(trigger.event_name, callback);
 	},
+	// Like dataLayer_event_interval, but matches dataLayer entries pushed as gtag.js
+	// `arguments` objects (numeric-keyed: {"0":"event","1":"<event_name>","2":{...}}),
+	// e.g. sites with `function gtag(){dataLayer.push(arguments);}` calling
+	// gtag('event', 'purchase', {...}) directly, rather than a plain {event: "..."} literal.
+	dataLayer_args_interval: (trigger, callback) => {
+		validateTriggerFields(trigger, ["event_name"]);
+		mw_trigger_detect_dataLayer_args_interval(trigger.event_name, callback);
+	},
 	parameter_equals: (trigger, callback) => {
 		validateTriggerFields(trigger, ["parameter_key", "parameter_value"]);
 		mw_trigger_parameter_equals(trigger.parameter_key, trigger.parameter_value, callback);
@@ -270,13 +278,44 @@ function mw_trigger_detect_dataLayer_event_interval(event_name, callback) {
 	setInterval(function () {
 
 		for (let i = 0; i < dataLayer.length; i++) {
-			if (dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`]) {
+			const entry = dataLayer[i];
+			if (entry == null) {
 				continue;
 			}
 
-			dataLayer[i][`mw_processed_${intervalDataLayerProcessID}`] = true;
+			if (entry[`mw_processed_${intervalDataLayerProcessID}`]) {
+				continue;
+			}
 
-			if (dataLayer[i].event === event_name) {
+			entry[`mw_processed_${intervalDataLayerProcessID}`] = true;
+
+			if (entry.event === event_name) {
+				callback();
+			}
+		}
+	}, 250);
+}
+
+function mw_trigger_detect_dataLayer_args_interval(event_name, callback) {
+	// Same polling/mark-processed pattern as mw_trigger_detect_dataLayer_event_interval,
+	// but reads a gtag.js-style `arguments` object instead of a plain {event: "..."} literal:
+	// dataLayer.push(arguments) serializes as {"0": "event", "1": "<name>", "2": {...params}}.
+	const intervalDataLayerProcessID = Math.random().toString(36).substring(2, 15);
+	setInterval(function () {
+
+		for (let i = 0; i < dataLayer.length; i++) {
+			const entry = dataLayer[i];
+			if (entry == null) {
+				continue;
+			}
+
+			if (entry[`mw_processed_${intervalDataLayerProcessID}`]) {
+				continue;
+			}
+
+			entry[`mw_processed_${intervalDataLayerProcessID}`] = true;
+
+			if (entry["0"] === "event" && entry["1"] === event_name) {
 				callback();
 			}
 		}
