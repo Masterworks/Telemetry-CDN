@@ -1500,30 +1500,6 @@ function triggerDoubleClickEcommerceEvent(ecommerce_data, options = {}, event_ty
 		});
 		
 	}
-    // Add noscript image tags for fallback tracking
-    const noscriptPurchase = document.createElement('noscript');
-    const imgPurchase = document.createElement('img');
-    imgPurchase.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=purch0;qty=1;cost=${ecommerce_data.total_transaction_amount};ord=${ecommerce_data.transaction_id}?`;
-    imgPurchase.width = "1";
-    imgPurchase.height = "1";
-    imgPurchase.alt = "";
-    noscriptPurchase.appendChild(imgPurchase);
-    document.body.appendChild(noscriptPurchase);
-
-    // Add noscript image tags for sustainer donations
-    ecommerce_data.items.forEach(item => {
-        if (item.category === "sustainer") {
-            const noscriptSustainer = document.createElement('noscript');
-            const imgSustainer = document.createElement('img');
-            imgSustainer.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=susta0;qty=1;cost=${item.price};ord=${ecommerce_data.transaction_id}-${item.sku}?`;
-            imgSustainer.width = "1";
-            imgSustainer.height = "1";
-            imgSustainer.alt = "";
-            noscriptSustainer.appendChild(imgSustainer);
-            document.body.appendChild(noscriptSustainer);
-        }
-    });
-
 }
 
 // ** MoSci ** //
@@ -2107,19 +2083,6 @@ function fireDoubleClickCustomEvent(event_type, event_name, options = {}) {
 			'send_to': `DC-${options.doubleclick_advertiser_id}/${options.doubleclick_type}/${event_type}`,
 		});
 	}
-	
-
-	 // Add noscript image tag for fallback tracking
-    const noscriptElement = document.createElement('noscript');
-    const imgElement = document.createElement('img');
-    imgElement.src = `https://ad.doubleclick.net/ddm/activity/src=${options.doubleclick_advertiser_id};type=${options.doubleclick_type};cat=${event_type};ord=1;num=1?`;
-    imgElement.width = "1";
-    imgElement.height = "1";
-    imgElement.alt = "";
-    noscriptElement.appendChild(imgElement);
-    document.body.appendChild(noscriptElement);
-	
-	
 	
 }
 
