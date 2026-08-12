@@ -480,9 +480,10 @@ function InitiateMWCustomDimensions() {
 			const rudderstackAnonymousID = rudderanalytics.getAnonymousId();
 			if (typeof rudderstackAnonymousID !== "undefined") {
 				if (!mwCustomDimensionsIntervalCleared) {
-					SetMWCustomDimensions();
+					// Stop polling before the call so a thrown error cannot leave the interval running
 					clearInterval(mwCustomDimensionsInterval);
 					mwCustomDimensionsIntervalCleared = true;
+					SetMWCustomDimensions();
 				}
 			}
 		}
@@ -491,9 +492,9 @@ function InitiateMWCustomDimensions() {
 	// If the interval is not cleared after the limit, clear it and set the custom dimensions
 	setTimeout(function () {
 		if (!mwCustomDimensionsIntervalCleared) {
-			SetMWCustomDimensions();
 			clearInterval(mwCustomDimensionsInterval);
 			mwCustomDimensionsIntervalCleared = true;
+			SetMWCustomDimensions();
 		}
 	}, MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT);
 }
@@ -508,7 +509,13 @@ function getUrlParameter(name, url = window.location.href) {
 		results = regex.exec(url);
 	if (!results) return null;
 	if (!results[2]) return "";
-	return decodeURIComponent(results[2].replace(/\+/g, " "));
+	var value = results[2].replace(/\+/g, " ");
+	try {
+		return decodeURIComponent(value);
+	} catch (e) {
+		// Unsubstituted ad macros (e.g. %%TTD_CREATIVEID%%) are not valid percent-encoding
+		return value;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
