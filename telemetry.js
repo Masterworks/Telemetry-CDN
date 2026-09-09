@@ -1225,14 +1225,19 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_typ
 		throw new MasterworksTelemetryError("saq is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	if (!options.conversion_id || typeof options.conversion_id !== "string") {
-		throw new MasterworksTelemetryError("Invalid options.conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	// StackAdapt uses separate conversion pixels (cids) for sustainer vs. one-time donations.
+	// Fall back to options.conversion_id if a dedicated sustainer_conversion_id isn't configured.
+	const isSustainer = ecommerce_data.items.some((item) => item.category === "sustainer");
+	const conversionId = isSustainer && options.sustainer_conversion_id ? options.sustainer_conversion_id : options.conversion_id;
+
+	if (!conversionId || typeof conversionId !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.conversion_id / options.sustainer_conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	saq(event_type, options.conversion_id, {
+	// Keys must match StackAdapt's macro names exactly ("revenue", "order_id") so they map to sa_conv_data_revenue / sa_conv_data_order_id.
+	saq(event_type, conversionId, {
 		revenue: ecommerce_data.total_transaction_amount,
-		"order id": ecommerce_data.transaction_id,
-		"transaction type": ecommerce_data.items[0].category,
+		order_id: ecommerce_data.transaction_id,
 	});
 }
 
@@ -1727,6 +1732,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "illumin":
 			fireIlluminCustomEvent(platform.illumin_pg);
 			break;
+		case "stackadapt":
+			fireStackAdaptCustomEvent(platform.event_type, platform.options);
+			break;
 		case "google_ads":
 			fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
@@ -1894,6 +1902,18 @@ function fireIlluminCustomEvent(illumin_pg) {
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
 	});
+}
+
+function fireStackAdaptCustomEvent(event_type, options = {}) {
+	if (typeof saq === "undefined") {
+		throw new MasterworksTelemetryError("saq is undefined").reportError();
+	}
+
+	if (!options.conversion_id || typeof options.conversion_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.conversion_id", { event_type: event_type, options: options }).reportError();
+	}
+
+	saq(event_type, options.conversion_id);
 }
 
 function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
