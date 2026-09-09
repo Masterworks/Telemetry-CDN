@@ -1225,20 +1225,25 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_typ
 		throw new MasterworksTelemetryError("saq is undefined", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	// StackAdapt uses separate conversion pixels (cids) for sustainer vs. one-time donations.
-	// Fall back to options.conversion_id if a dedicated sustainer_conversion_id isn't configured.
-	const isSustainer = ecommerce_data.items.some((item) => item.category === "sustainer");
-	const conversionId = isSustainer && options.sustainer_conversion_id ? options.sustainer_conversion_id : options.conversion_id;
-
-	if (!conversionId || typeof conversionId !== "string") {
-		throw new MasterworksTelemetryError("Invalid options.conversion_id / options.sustainer_conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
+	if (!options.conversion_id || typeof options.conversion_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
 	// Keys must match StackAdapt's macro names exactly ("revenue", "order_id") so they map to sa_conv_data_revenue / sa_conv_data_order_id.
-	saq(event_type, conversionId, {
+	const conversionData = {
 		revenue: ecommerce_data.total_transaction_amount,
 		order_id: ecommerce_data.transaction_id,
-	});
+	};
+
+	// Match Facebook's pattern: the main (one-time) conversion pixel fires on every donation,
+	// and the sustainer conversion pixel fires additionally on top of it when applicable —
+	// so a sustainer donation fires both, not one or the other.
+	saq(event_type, options.conversion_id, conversionData);
+
+	const hasSustainer = ecommerce_data.items.some((item) => item.category === "sustainer");
+	if (hasSustainer && options.sustainer_conversion_id && typeof options.sustainer_conversion_id === "string") {
+		saq(event_type, options.sustainer_conversion_id, conversionData);
+	}
 }
 
 // ** BING ** //
