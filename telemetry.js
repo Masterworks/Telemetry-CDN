@@ -1229,11 +1229,21 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_typ
 		throw new MasterworksTelemetryError("Invalid options.conversion_id", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	saq(event_type, options.conversion_id, {
+	// Keys must match StackAdapt's macro names exactly ("revenue", "order_id") so they map to sa_conv_data_revenue / sa_conv_data_order_id.
+	const conversionData = {
 		revenue: ecommerce_data.total_transaction_amount,
-		"order id": ecommerce_data.transaction_id,
-		"transaction type": ecommerce_data.items[0].category,
-	});
+		order_id: ecommerce_data.transaction_id,
+	};
+
+	// Match Facebook's pattern: the main (one-time) conversion pixel fires on every donation,
+	// and the sustainer conversion pixel fires additionally on top of it when applicable —
+	// so a sustainer donation fires both, not one or the other.
+	saq(event_type, options.conversion_id, conversionData);
+
+	const hasSustainer = ecommerce_data.items.some((item) => item.category === "sustainer");
+	if (hasSustainer && options.sustainer_conversion_id && typeof options.sustainer_conversion_id === "string") {
+		saq(event_type, options.sustainer_conversion_id, conversionData);
+	}
 }
 
 // ** BING ** //
@@ -1727,6 +1737,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "illumin":
 			fireIlluminCustomEvent(platform.illumin_pg);
 			break;
+		case "stackadapt":
+			fireStackAdaptCustomEvent(platform.event_type, platform.options);
+			break;
 		case "google_ads":
 			fireGoogleAdsCustomEvent(platform.event_type, configuration.event_name, platform.options);
 			break;
@@ -1894,6 +1907,18 @@ function fireIlluminCustomEvent(illumin_pg) {
 		pixelKey: mw_telemetry_settings.illumin_pixel_id,
 		pg: illumin_pg,
 	});
+}
+
+function fireStackAdaptCustomEvent(event_type, options = {}) {
+	if (typeof saq === "undefined") {
+		throw new MasterworksTelemetryError("saq is undefined").reportError();
+	}
+
+	if (!options.conversion_id || typeof options.conversion_id !== "string") {
+		throw new MasterworksTelemetryError("Invalid options.conversion_id", { event_type: event_type, options: options }).reportError();
+	}
+
+	saq(event_type, options.conversion_id);
 }
 
 function fireGoogleAdsCustomEvent(event_type, event_name, options = {}) {
