@@ -1616,7 +1616,7 @@ function triggerTatariEcommerceEvent(ecommerce_data, options = {}, event_type = 
 		}).reportError();
 	}
 
-	tatari.purchase({
+	const purchasePayload = {
 		total: ecommerce_data.total_transaction_amount,
 		currency: "USD",
 		orderId: ecommerce_data.transaction_id,
@@ -1627,8 +1627,13 @@ function triggerTatariEcommerceEvent(ecommerce_data, options = {}, event_type = 
 			productId: item.sku,
 			category: item.category,
 		})),
-		newPurchase: options.new_purchase !== undefined ? options.new_purchase : true,
-	});
+	};
+
+	if (options.new_purchase !== undefined) {
+		purchasePayload.newPurchase = options.new_purchase;
+	}
+
+	tatari.purchase(purchasePayload);
 }
 
 /* ------------------------ Transaction Cookie Functions ----------------------- */
