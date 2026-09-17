@@ -710,6 +710,9 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 				case "podscribe":
 					triggerPodscribeEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
 					break;
+				case "tatari":
+					triggerTatariEcommerceEvent(ecommerce_data, platform.options, platform.event_type);
+					break;
 				default:
 					throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platform: " + platform.name).reportError();
 			}
@@ -1604,6 +1607,30 @@ function triggerPodscribeEcommerceEvent(ecommerce_data, options = {}, event_type
 	});
 }
 
+// ** Tatari ** //
+function triggerTatariEcommerceEvent(ecommerce_data, options = {}, event_type = "Purchase") {
+	if (typeof tatari === "undefined") {
+		throw new MasterworksTelemetryError("tatari is undefined", {
+			ecommerce_data: ecommerce_data,
+			event_type: event_type,
+		}).reportError();
+	}
+
+	tatari.purchase({
+		total: ecommerce_data.total_transaction_amount,
+		currency: "USD",
+		orderId: ecommerce_data.transaction_id,
+		items: ecommerce_data.items.map((item) => ({
+			name: item.name,
+			price: item.price,
+			quantity: item.quantity,
+			productId: item.sku,
+			category: item.category,
+		})),
+		newPurchase: options.new_purchase !== undefined ? options.new_purchase : true,
+	});
+}
+
 /* ------------------------ Transaction Cookie Functions ----------------------- */
 
 function generateTransactionCookieValue(ecommerce_data) {
@@ -1772,6 +1799,9 @@ function handlePlatformEvent(platform, configuration) {
 			break;
 		case "intercom":
 			fireIntercomCustomEvent(platform.event_type);
+			break;
+		case "tatari":
+			fireTatariCustomEvent(platform.event_type, configuration.metadata);
 			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
@@ -2207,6 +2237,14 @@ function fireIntercomCustomEvent(event_type, event_name, options = {}) {
 	}
 
 	window.Intercom("trackEvent", event_type, metadata);
+}
+
+function fireTatariCustomEvent(event_type, metadata = {}) {
+	if (typeof tatari === "undefined") {
+		throw new MasterworksTelemetryError("tatari is undefined").reportError();
+	}
+
+	tatari.track(event_type, metadata);
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
