@@ -649,12 +649,16 @@ function mwRemarketingConsentState() {
 		return "none";
 	}
 
+	// Piwik stores consent in ppms_privacy_<container id>. Other sites' cookies can be visible here too (shared parent
+	// domains, a client's previous site id), so only this container's own cookie counts, matching what Piwik honors.
+	const containerId = sevenTag.configuration && sevenTag.configuration.id;
+	const cookieName = "ppms_privacy_" + containerId;
 	let foundCookie = false;
 	let granted = true;
 
 	document.cookie.split(";").forEach((pair) => {
 		const separator = pair.indexOf("=");
-		if (separator < 0 || pair.slice(0, separator).trim().indexOf("ppms_privacy_") !== 0) {
+		if (!containerId || separator < 0 || pair.slice(0, separator).trim() !== cookieName) {
 			return;
 		}
 
