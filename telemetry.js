@@ -679,12 +679,7 @@ function mwPlatformAllowed(platform_name) {
 		return true;
 	}
 
-	if (mwRemarketingConsentState() !== "denied") {
-		return true;
-	}
-
-	console.log("MW telemetry: skipped " + platform_name + " (remarketing consent not granted)");
-	return false;
+	return mwRemarketingConsentState() !== "denied";
 }
 
 // Adds the visitor's remarketing consent to dataLayer pushes only when the site has consent enabled, so existing
