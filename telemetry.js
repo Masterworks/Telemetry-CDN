@@ -625,6 +625,74 @@ function isTransactionEventADuplicate(ecommerce_data) {
 	return false;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                         Remarketing consent gate                           */
+/* -------------------------------------------------------------------------- */
+
+// Platforms that are analytics / on-site tools and never carry ad-platform data. Every other platform is treated as
+// an advertising platform and is blocked unless remarketing consent was granted, so a platform added to telemetry.js
+// later is gated by default instead of leaking until someone remembers to gate it.
+const MW_NON_AD_PLATFORMS = ["piwik", "rudderstack", "vwo", "optimonk"];
+
+// "none"    - the site's Piwik container does not have consent enabled (or consent_gating is false): behavior is unchanged
+// "granted" - consent enabled and the visitor's recorded remarketing consent is granted (status 1)
+// "denied"  - consent enabled and remarketing is denied (0), undecided (-1), missing, or unreadable
+function mwRemarketingConsentState() {
+	if (mw_telemetry_settings.consent_gating === false) {
+		return "none";
+	}
+
+	// ppms.cm ships in every Piwik container, so it does not mean the site uses consent. The container's own
+	// consentSettings.consent_enabled is the per-site switch (on for only a few sites). Unreadable means "none".
+	const consentSettings = typeof sevenTag !== "undefined" && sevenTag ? sevenTag.consentSettings : null;
+	if (!consentSettings || consentSettings.consent_enabled !== true) {
+		return "none";
+	}
+
+	// Piwik stores consent in ppms_privacy_<container id>. Other sites' cookies can be visible here too (shared parent
+	// domains, a client's previous site id), so only this container's own cookie counts, matching what Piwik honors.
+	const containerId = sevenTag.configuration && sevenTag.configuration.id;
+	const cookieName = "ppms_privacy_" + containerId;
+	let foundCookie = false;
+	let granted = true;
+
+	document.cookie.split(";").forEach((pair) => {
+		const separator = pair.indexOf("=");
+		if (!containerId || separator < 0 || pair.slice(0, separator).trim() !== cookieName) {
+			return;
+		}
+
+		foundCookie = true;
+
+		try {
+			const value = JSON.parse(decodeURIComponent(pair.slice(separator + 1).trim()));
+			const remarketing = value && value.consents && value.consents.remarketing;
+			if (!remarketing || remarketing.status !== 1) {
+				granted = false;
+			}
+		} catch (error) {
+			granted = false;
+		}
+	});
+
+	return foundCookie && granted ? "granted" : "denied";
+}
+
+function mwPlatformAllowed(platform_name) {
+	if (MW_NON_AD_PLATFORMS.indexOf(platform_name) !== -1) {
+		return true;
+	}
+
+	return mwRemarketingConsentState() !== "denied";
+}
+
+// Adds the visitor's remarketing consent to dataLayer pushes only when the site has consent enabled, so existing
+// payloads are unchanged on every other site.
+function mwConsentDataLayerFields() {
+	const state = mwRemarketingConsentState();
+	return state === "none" ? {} : { mw_remarketing_consent: state === "granted" };
+}
+
 function fireEcommerceEvents(configuration, ecommerce_data) {
 	if (!Array.isArray(configuration.platforms) || configuration.platforms.length < 1) {
 		throw new MasterworksTelemetryError("Invalid ecommerce_configuration.platforms", { configuration: configuration }).reportError();
@@ -639,6 +707,10 @@ function fireEcommerceEvents(configuration, ecommerce_data) {
 	writeTransactionDataLayerEvent(ecommerce_data);
 
 	configuration.platforms.forEach((platform) => {
+		if (!mwPlatformAllowed(platform.name)) {
+			return;
+		}
+
 		try {
 			switch (platform.name) {
 				case "rudderstack":
@@ -1687,6 +1759,7 @@ function writeTransactionDataLayerEvent(ecommerce_data) {
 	dataLayer.push({
 		event: "mw_ecommerce_transaction",
 		data: ecommerce_data,
+		...mwConsentDataLayerFields(),
 	});
 }
 
@@ -1747,6 +1820,10 @@ function triggerMWCustomEvent(configuration) {
 }
 
 function handlePlatformEvent(platform, configuration) {
+	if (!mwPlatformAllowed(platform.name)) {
+		return;
+	}
+
 	switch (platform.name) {
 		case "rudderstack":
 			fireRudderstackCustomEvent(platform.event_type, configuration.event_name, platform.options, configuration.metadata);
@@ -2258,6 +2335,7 @@ function writeEventToDataLayer(event_name, metadata = {}) {
 		event: "mw_custom_event_telemetry",
 		event_name: event_name,
 		metadata: metadata,
+		...mwConsentDataLayerFields(),
 	});
 }
 
