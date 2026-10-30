@@ -634,15 +634,18 @@ function isTransactionEventADuplicate(ecommerce_data) {
 // later is gated by default instead of leaking until someone remembers to gate it.
 const MW_NON_AD_PLATFORMS = ["piwik", "rudderstack", "vwo", "optimonk"];
 
-// "none"    - the site has no Piwik consent manager (or consent_gating is false): behavior is unchanged
-// "granted" - consent manager present and the visitor's recorded remarketing consent is granted (status 1)
-// "denied"  - consent manager present and remarketing is denied (0), undecided (-1), missing, or unreadable
+// "none"    - the site's Piwik container does not have consent enabled (or consent_gating is false): behavior is unchanged
+// "granted" - consent enabled and the visitor's recorded remarketing consent is granted (status 1)
+// "denied"  - consent enabled and remarketing is denied (0), undecided (-1), missing, or unreadable
 function mwRemarketingConsentState() {
 	if (mw_telemetry_settings.consent_gating === false) {
 		return "none";
 	}
 
-	if (typeof ppms === "undefined" || !ppms || !ppms.cm) {
+	// ppms.cm ships in every Piwik container, so it does not mean the site uses consent. The container's own
+	// consentSettings.consent_enabled is the per-site switch (on for only a few sites). Unreadable means "none".
+	const consentSettings = typeof sevenTag !== "undefined" && sevenTag ? sevenTag.consentSettings : null;
+	if (!consentSettings || consentSettings.consent_enabled !== true) {
 		return "none";
 	}
 
@@ -684,8 +687,8 @@ function mwPlatformAllowed(platform_name) {
 	return false;
 }
 
-// Adds the visitor's remarketing consent to dataLayer pushes only when a consent manager is present, so existing
-// payloads are unchanged on sites without one.
+// Adds the visitor's remarketing consent to dataLayer pushes only when the site has consent enabled, so existing
+// payloads are unchanged on every other site.
 function mwConsentDataLayerFields() {
 	const state = mwRemarketingConsentState();
 	return state === "none" ? {} : { mw_remarketing_consent: state === "granted" };
