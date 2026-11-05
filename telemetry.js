@@ -857,10 +857,13 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 		if (typeof fbq !== "undefined") {
 			clearInterval(interval);
 
+			// Non-standard event names (e.g. ProductPurchase) should be sent as custom events
+			const track_method = options.facebook_track_custom ? "trackSingleCustom" : "trackSingle";
+
 			if (!options.sustainer_only) {
 				if (options.facebook_pixel_ids && options.facebook_pixel_ids.length > 0) {
 					for (let i = 0; i < options.facebook_pixel_ids.length; i++) {
-						fbq("trackSingle", options.facebook_pixel_ids[i].toString(), event_type, {
+						fbq(track_method, options.facebook_pixel_ids[i].toString(), event_type, {
 							value: ecommerce_data.total_transaction_amount,
 							currency: "USD",
 							content_ids: ecommerce_data.items.map((item) => item.sku),
@@ -872,7 +875,7 @@ function triggerFacebookEcommerceEvents(ecommerce_data, options = {}, event_type
 					const facebookPixelIds = fbq.getState().pixels.map(pixel => pixel.id)
 
 					for (let i = 0; i < facebookPixelIds.length; i++) {
-						fbq("trackSingle", facebookPixelIds[i].toString(), event_type, {
+						fbq(track_method, facebookPixelIds[i].toString(), event_type, {
 							value: ecommerce_data.total_transaction_amount,
 							currency: "USD",
 							content_ids: ecommerce_data.items.map((item) => item.sku),
