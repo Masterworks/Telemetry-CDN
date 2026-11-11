@@ -408,6 +408,31 @@ function matches_current_url(url) {
 	return window.location.href.includes(url);
 }
 
+// Rudderstack is optional. With the base tag removed, `rudderanalytics` never
+// exists — do not call, queue, or read the SDK in that case.
+function rudderstackMethod(methodName) {
+	if (typeof rudderanalytics === "undefined" || rudderanalytics === null) {
+		return null;
+	}
+	const method = rudderanalytics[methodName];
+	if (typeof method !== "function") {
+		return null;
+	}
+	return method.bind(rudderanalytics);
+}
+
+function getRudderstackUserTraits() {
+	const getUserTraits = rudderstackMethod("getUserTraits");
+	if (!getUserTraits) {
+		return {};
+	}
+	const traits = getUserTraits();
+	if (!traits || typeof traits !== "object" || Array.isArray(traits)) {
+		return {};
+	}
+	return traits;
+}
+
 /* -------------------------------------------------------------------------- */
 /*                              Custom Dimensions                             */
 /* -------------------------------------------------------------------------- */
@@ -420,8 +445,9 @@ function SetMWCustomDimensions() {
 	var csc = getUrlParameter("refcd");
 	var seid = getUrlParameter("seid");
 	var rudd_id = "";
-	if (typeof rudderanalytics != "undefined") {
-		rudd_id = rudderanalytics.getAnonymousId();
+	const getAnonymousId = rudderstackMethod("getAnonymousId");
+	if (getAnonymousId) {
+		rudd_id = getAnonymousId();
 	}
 
 	if (mw_telemetry_settings.matomo_conflict) {
@@ -475,26 +501,41 @@ function SetMWCustomDimensions() {
 
 function InitiateMWCustomDimensions() {
 	let mwCustomDimensionsIntervalCleared = false;
+	let publishedWithoutRudderstack = false;
+
+	function publishCustomDimensions() {
+		// Stop polling before the call so a thrown error cannot leave the interval running
+		clearInterval(mwCustomDimensionsInterval);
+		mwCustomDimensionsIntervalCleared = true;
+		SetMWCustomDimensions();
+	}
+
 	let mwCustomDimensionsInterval = setInterval(function () {
-		if (typeof rudderanalytics !== "undefined" && typeof rudderanalytics.getAnonymousId !== "undefined") {
-			const rudderstackAnonymousID = rudderanalytics.getAnonymousId();
-			if (typeof rudderstackAnonymousID !== "undefined") {
-				if (!mwCustomDimensionsIntervalCleared) {
-					// Stop polling before the call so a thrown error cannot leave the interval running
-					clearInterval(mwCustomDimensionsInterval);
-					mwCustomDimensionsIntervalCleared = true;
-					SetMWCustomDimensions();
-				}
-			}
+		const getAnonymousId = rudderstackMethod("getAnonymousId");
+		if (!getAnonymousId || mwCustomDimensionsIntervalCleared) {
+			return;
+		}
+		const rudderstackAnonymousID = getAnonymousId();
+		if (typeof rudderstackAnonymousID !== "undefined") {
+			publishCustomDimensions();
 		}
 	}, MW_CUSTOM_DIMENSIONS_INTERVAL_DURATION);
+
+	// No base tag: publish the other custom dimensions now. The interval only
+	// reads the SDK if getAnonymousId appears later (base tag injected after this script).
+	if (typeof rudderanalytics === "undefined") {
+		SetMWCustomDimensions();
+		publishedWithoutRudderstack = true;
+	}
 
 	// If the interval is not cleared after the limit, clear it and set the custom dimensions
 	setTimeout(function () {
 		if (!mwCustomDimensionsIntervalCleared) {
 			clearInterval(mwCustomDimensionsInterval);
 			mwCustomDimensionsIntervalCleared = true;
-			SetMWCustomDimensions();
+			if (!publishedWithoutRudderstack) {
+				SetMWCustomDimensions();
+			}
 		}
 	}, MW_CUSTOM_DIMENSIONS_INTERVAL_LIMIT);
 }
@@ -528,8 +569,9 @@ function initiatePiwikIdToRudderstack() {
 	let piwikIdCheckIntervalCleared = false;
 	let piwikIdCheckInterval = setInterval(() => {
 		var piwikCookieId = getPiwikCookieId();
-		if (typeof rudderanalytics !== "undefined" && piwikCookieId) {
-			rudderanalytics.identify("", { piwik_id: piwikCookieId });
+		const identify = rudderstackMethod("identify");
+		if (identify && piwikCookieId) {
+			identify("", { piwik_id: piwikCookieId });
 			clearInterval(piwikIdCheckInterval);
 			piwikIdCheckIntervalCleared = true;
 		}
@@ -728,14 +770,12 @@ function generateTransactionID() {
 
 // ** Rudderstack ** //
 function triggerRudderstackEcommerceEvent(ecommerce_data, options = {}, event_type = "Order Completed", configuration_name) {
-	if (typeof rudderanalytics === "undefined") {
-		throw new MasterworksTelemetryError("rudderanalytics is not defined", {
-			ecommerce_data: ecommerce_data,
-			event_type: event_type,
-		}).reportError();
+	const track = rudderstackMethod("track");
+	if (!track) {
+		return;
 	}
 
-	rudderanalytics.track(event_type, {
+	track(event_type, {
 		order_id: ecommerce_data.transaction_id,
 		currency: "USD",
 		revenue: ecommerce_data.total_transaction_amount,
@@ -1362,7 +1402,7 @@ function triggerTwitterEcommerceEvent(ecommerce_data, options = {}, event_type =
 		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids", { ecommerce_data: ecommerce_data, event_type: event_type, options: options }).reportError();
 	}
 
-	const userData = rudderanalytics.getUserTraits();
+	const userData = getRudderstackUserTraits();
 
 	for (let i = 0; i < options.twitter_event_ids.length; i++) {
 		twq("event", options.twitter_event_ids[i], {
@@ -1814,8 +1854,9 @@ function handlePlatformEvent(platform, configuration) {
 }
 
 function fireRudderstackCustomEvent(event_type, event_name, options = {}, metadata = {}) {
-	if (typeof rudderanalytics === "undefined") {
-		throw new MasterworksTelemetryError("rudderanalytics is undefined").reportError();
+	const track = rudderstackMethod("track");
+	if (!track) {
+		return;
 	}
 
 	// Merge metadata: platform-specific metadata takes precedence over configuration metadata
@@ -1825,7 +1866,7 @@ function fireRudderstackCustomEvent(event_type, event_name, options = {}, metada
 	};
 	
 	mergedMetadata.event_name = event_name;
-	rudderanalytics.track(event_type, mergedMetadata);
+	track(event_type, mergedMetadata);
 }
 
 function firePiwikCustomEvent(event_type, event_name, options = {}) {
@@ -2016,7 +2057,7 @@ function fireTwitterCustomEvent(event_type, options = {}) {
 		throw new MasterworksTelemetryError("Invalid options.twitter_event_ids: " + options.twitter_event_ids).reportError();
 	}
 
-	const userData = rudderanalytics.getUserTraits();
+	const userData = getRudderstackUserTraits();
 
 	for (let i = 0; i < options.twitter_event_ids.length; i++) {
 		twq("event", options.twitter_event_ids[i], {
@@ -2589,18 +2630,11 @@ class IdentificationConfiguration {
 
 		fieldValue = fieldValue.replace(/[^a-zA-Z0-9@.\-_ ]/g, "");
 
-		const currentTraits = rudderanalytics.getUserTraits() || {};
-		let userID = rudderanalytics.getUserId();
-
 		if (fieldType === "email") {
 			// Check if the email is valid
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fieldValue)) {
 				return
-			} 
-
-			currentTraits.email = fieldValue;
-			userID = fieldValue;
-
+			}
 
 			if (mw_telemetry_settings.matomo_conflict) {
 				if (typeof _ppas != "undefined") {
@@ -2611,6 +2645,24 @@ class IdentificationConfiguration {
 					_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + fieldValue, 0, { dimension4: fieldValue }]);
 				}
 			}
+		}
+
+		const getUserTraits = rudderstackMethod("getUserTraits");
+		const getUserId = rudderstackMethod("getUserId");
+		const identify = rudderstackMethod("identify");
+		if (!getUserTraits || !getUserId || !identify) {
+			return;
+		}
+
+		const currentTraits = getUserTraits() || {};
+		if (!currentTraits || typeof currentTraits !== "object" || Array.isArray(currentTraits)) {
+			return;
+		}
+		let userID = getUserId();
+
+		if (fieldType === "email") {
+			currentTraits.email = fieldValue;
+			userID = fieldValue;
 		}
 
 		if (!userID) {
@@ -2631,37 +2683,55 @@ class IdentificationConfiguration {
 			currentTraits[fieldType] = fieldValue;
 		}
 
-		rudderanalytics.identify(userID, currentTraits);
+		identify(userID, currentTraits);
 	}
 
 	fireCustomIdentificationEvent(configuration) {
 		try {
-			const traits = rudderanalytics.getUserTraits() || {};
 			const identifyData = getMWIdentificationData(configuration.configuration_name);
-			if (identifyData) {
-				let email = "";
-				for (const key in identifyData) {
-					if (key === "email") {
-						email = identifyData[key];
-						traits.email = email;
-						traits.raw_email = email;
+			if (!identifyData) {
+				return;
+			}
 
-						if (mw_telemetry_settings.matomo_conflict) {
-							if (typeof _ppas != "undefined") {
-								_ppas.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
-							}
-						} else {
-							if (typeof _paq != "undefined") {
-								_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
-							}
+			let email = "";
+			for (const key in identifyData) {
+				if (key === "email") {
+					email = identifyData[key];
+
+					if (mw_telemetry_settings.matomo_conflict) {
+						if (typeof _ppas != "undefined") {
+							_ppas.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
 						}
 					} else {
-						traits[key] = identifyData[key];
+						if (typeof _paq != "undefined") {
+							_paq.push(["trackEvent", "mw", "mw : emcap", "mw : emcap : " + email, 0, { dimension4: email }]);
+						}
 					}
 				}
-
-				rudderanalytics.identify(email, traits);
 			}
+
+			const getUserTraits = rudderstackMethod("getUserTraits");
+			const identify = rudderstackMethod("identify");
+			if (!getUserTraits || !identify) {
+				return;
+			}
+
+			const traits = getUserTraits() || {};
+			if (!traits || typeof traits !== "object" || Array.isArray(traits)) {
+				return;
+			}
+
+			for (const key in identifyData) {
+				if (key === "email") {
+					email = identifyData[key];
+					traits.email = email;
+					traits.raw_email = email;
+				} else {
+					traits[key] = identifyData[key];
+				}
+			}
+
+			identify(email, traits);
 		} catch (error) {
 			console.error(error);
 		}
@@ -2756,11 +2826,16 @@ class ProductSearchConfiguration {
 
 	fireProductSearchEvent() {
 		const productSearch = this.getProductSearch();
-		if (productSearch) {
-			rudderanalytics.track("Products Searched", {
-				query: productSearch,
-			});
+		if (!productSearch) {
+			return;
 		}
+		const track = rudderstackMethod("track");
+		if (!track) {
+			return;
+		}
+		track("Products Searched", {
+			query: productSearch,
+		});
 	}
 }
 
@@ -2783,11 +2858,25 @@ async function getGAEnhancedUserData() {
 
 	const waitForTraits = () => {
 		return new Promise((resolve, reject) => {
+			if (typeof rudderanalytics === "undefined") {
+				resolve(null);
+				return;
+			}
+
 			const startTime = Date.now();
 
 			const interval = setInterval(() => {
-				const currentTraits = rudderanalytics.getUserTraits();
-				if (currentTraits) {
+				const getUserTraits = rudderstackMethod("getUserTraits");
+				if (!getUserTraits) {
+					if (Date.now() - startTime >= maxWaitTime) {
+						clearInterval(interval);
+						reject(new Error("Timeout waiting for user traits."));
+					}
+					return;
+				}
+
+				const currentTraits = getUserTraits();
+				if (currentTraits && typeof currentTraits === "object") {
 					clearInterval(interval);
 					resolve(currentTraits);
 				} else if (Date.now() - startTime >= maxWaitTime) {
@@ -2800,6 +2889,9 @@ async function getGAEnhancedUserData() {
 
 	try {
 		const currentTraits = await waitForTraits();
+		if (!currentTraits || typeof currentTraits !== "object") {
+			return null;
+		}
 		const use_google_ads_enhanced_user_data = {};
 
 		if (currentTraits.email) {
