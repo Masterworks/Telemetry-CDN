@@ -1293,8 +1293,8 @@ function triggerStackAdaptEcommerceEvent(ecommerce_data, options = {}, event_typ
 function triggerBingEcommerceEvent(ecommerce_data, options = {}, event_type = "donation") {
 	window.uetq = window.uetq || [];
 	window.uetq.push("event", event_type, {
-		event_category: "donation submit",
-		event_label: "donation : submit",
+		event_category: `${event_type} submit`,
+		event_label: `${event_type} : submit`,
 		event_value: ecommerce_data.total_transaction_amount,
 		revenue_value: ecommerce_data.total_transaction_amount,
 		currency: "USD",
@@ -1848,6 +1848,9 @@ function handlePlatformEvent(platform, configuration) {
 		case "tatari":
 			fireTatariCustomEvent(platform.event_type, configuration.metadata);
 			break;
+		case "bing":
+			fireBingCustomEvent(platform.event_type, configuration.event_name);
+			break;
 		default:
 			throw new MasterworksTelemetryError("Invalid platform: " + platform.name).reportError().reportError();
 	}
@@ -2291,6 +2294,15 @@ function fireTatariCustomEvent(event_type, metadata = {}) {
 	}
 
 	tatari.track(event_type, metadata);
+}
+
+// ** Bing custom event ** //
+function fireBingCustomEvent(event_type, event_name) {
+	window.uetq = window.uetq || [];
+	window.uetq.push("event", event_type, {
+		event_category: event_name,
+		event_label: event_name,
+	});
 }
 
 function writeEventToDataLayer(event_name, metadata = {}) {
